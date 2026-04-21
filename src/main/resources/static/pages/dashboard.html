@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – HR Management</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== CSS CHỈ DÙNG CHO NHỮNG THỨ BOOTSTRAP CHƯA HỖ TRỢ ===== */
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: #1e2235;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        /* Logo trên sidebar */
+        .sidebar-logo {
+            padding: 20px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 16px; flex-shrink: 0;
+        }
+        .logo-text { color: white; font-size: 14px; font-weight: 700; }
+        .logo-sub  { color: rgba(255,255,255,0.4); font-size: 10px; }
+
+        /* Nav menu */
+        .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255,255,255,0.3);
+            padding: 10px 8px 4px;
+            margin-top: 6px;
+        }
+
+        /* Mỗi nav item */
+        .nav-item-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 9px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 2px;
+            transition: all 0.2s;
+            border: none; background: none; width: 100%; text-align: left;
+        }
+        .nav-item-link:hover {
+            background: rgba(255,255,255,0.07);
+            color: white;
+        }
+        /* Nav item đang active (đang xem) */
+        .nav-item-link.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2));
+            color: #a5b4fc;
+            border: 1px solid rgba(99,102,241,0.2);
+        }
+        .nav-item-link i { width: 18px; text-align: center; }
+
+        /* Badge thông báo nhỏ trên nav */
+        .nav-badge {
+            margin-left: auto;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        /* Thông tin user ở cuối sidebar */
+        .sidebar-user {
+            padding: 14px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .user-card {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px; border-radius: 10px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .user-card:hover { background: rgba(255,255,255,0.07); }
+        .user-avatar {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 13px; font-weight: 700;
+        }
+        .user-name { color: white; font-size: 13px; font-weight: 600; }
+        .user-role {
+            font-size: 10px; background: rgba(99,102,241,0.25);
+            color: #a5b4fc; padding: 2px 6px; border-radius: 4px;
+            display: inline-block; margin-top: 2px;
+        }
+
+        /* === MAIN CONTENT === */
+        .main-content {
+            margin-left: 250px;  /* bằng width sidebar */
+            min-height: 100vh;
+        }
+
+        /* Header trên cùng */
+        .top-header {
+            background: white;
+            padding: 0 24px;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .page-title { font-size: 18px; font-weight: 700; color: #1f2937; }
+        .page-subtitle { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+
+        /* === STAT CARDS (4 thẻ thống kê) === */
+        .stat-card {
+            border: none; border-radius: 14px;
+            padding: 20px; cursor: default;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-value { font-size: 32px; font-weight: 800; line-height: 1; }
+        .stat-label { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+        .stat-icon  { font-size: 28px; opacity: 0.4; }
+
+        /* === TABLE WRAPPER === */
+        .table-card {
+            background: white; border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .table-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .table-card-title { font-size: 15px; font-weight: 600; color: #1f2937; }
+
+        /* Bootstrap table override nhỏ */
+        .table th {
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: #9ca3af; background: #f9fafb;
+        }
+        .table td { font-size: 13.5px; vertical-align: middle; }
+
+        /* Màu avatar nhân viên */
+        .emp-avatar {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; color: white;
+        }
+
+        /* Welcome banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, #312e81, #4338ca, #1e3a5f);
+            border-radius: 14px; padding: 24px 28px; color: white;
+            position: relative; overflow: hidden;
+        }
+
+        /* Quick action buttons */
+        .quick-btn {
+            background: white; border: 1px solid #e5e7eb;
+            border-radius: 12px; padding: 16px;
+            text-align: center; cursor: pointer; text-decoration: none;
+            color: #6b7280; font-size: 12px; font-weight: 500;
+            transition: all 0.2s; display: block;
+        }
+        .quick-btn:hover {
+            border-color: #6366f1; color: #4f46e5;
+            background: #eef2ff; transform: translateY(-2px);
+        }
+        .quick-btn i { font-size: 22px; display: block; margin-bottom: 8px; }
+
+        /* Màu custom cho btn */
+        .btn-indigo {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none; color: white;
+        }
+        .btn-indigo:hover { opacity: 0.9; color: white; }
+
+        /* Section ẩn mặc định */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Clock realtime */
+        #clock { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body>
+
+<!-- ===================== SIDEBAR ===================== -->
+<nav class="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+        <div class="logo-icon"><i class="fas fa-users-gear"></i></div>
+        <div>
+            <div class="logo-text">HR System</div>
+            <div class="logo-sub">MANAGEMENT v1.0</div>
+        </div>
+    </div>
+
+    <!-- Menu điều hướng -->
+    <div class="sidebar-nav">
+        <div class="nav-section-label">Tổng quan</div>
+        <button class="nav-item-link active" id="nav-dashboard" onclick="showSection('dashboard')">
+            <i class="fas fa-gauge-high"></i> Dashboard
+        </button>
+
+        <div class="nav-section-label">Nhân sự</div>
+        <button class="nav-item-link" id="nav-employee" onclick="showSection('employee')">
+            <i class="fas fa-users"></i> Nhân viên
+        </button>
+        <button class="nav-item-link" id="nav-department" onclick="showSection('department')">
+            <i class="fas fa-building"></i> Phòng ban
+        </button>
+        <button class="nav-item-link" id="nav-position" onclick="showSection('position')">
+            <i class="fas fa-briefcase"></i> Chức vụ
+        </button>
+
+        <div class="nav-section-label">Chấm công & Nghỉ phép</div>
+        <button class="nav-item-link" id="nav-attendance" onclick="showSection('attendance')">
+            <i class="fas fa-fingerprint"></i> Chấm công
+        </button>
+        <button class="nav-item-link" id="nav-leave" onclick="showSection('leave')">
+            <i class="fas fa-calendar-xmark"></i> Nghỉ phép
+            <span class="nav-badge badge bg-warning text-dark" id="leave-badge">3</span>
+        </button>
+
+        <div class="nav-section-label">Tài chính</div>
+        <button class="nav-item-link" id="nav-payroll" onclick="showSection('payroll')">
+            <i class="fas fa-money-bill-wave"></i> Bảng lương
+        </button>
+    </div>
+
+    <!-- Thông tin user đăng nhập -->
+    <div class="sidebar-user">
+        <div class="user-card" onclick="handleLogout()">
+            <div class="user-avatar" id="sidebar-avatar">AD</div>
+            <div style="flex:1; min-width:0">
+                <div class="user-name" id="sidebar-name">Admin</div>
+                <div class="user-role" id="sidebar-role">ADMIN</div>
+            </div>
+            <i class="fas fa-right-from-bracket" style="color:rgba(255,255,255,0.3); font-size:13px"></i>
+        </div>
+    </div>
+</nav>
+
+<!-- ===================== MAIN CONTENT ===================== -->
+<div class="main-content">
+
+    <!-- Header trên cùng -->
+    <div class="top-header">
+        <div>
+            <div class="page-title" id="header-title">Dashboard</div>
+            <div class="page-subtitle" id="header-date">Đang tải...</div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Tìm kiếm -->
+            <div class="input-group" style="width:220px">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="fas fa-search text-muted" style="font-size:12px"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 bg-light" id="global-search"
+                       placeholder="Tìm kiếm..." style="font-size:13px">
+            </div>
+            <!-- Nút thông báo -->
+            <button class="btn btn-light position-relative" id="btn-notifications">
+                <i class="fas fa-bell"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style="font-size:9px">3</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Khu vực nội dung chính -->
+    <div class="p-4">
+
+        <!-- ============== SECTION: DASHBOARD ============== -->
+        <div class="section active" id="section-dashboard">
+
+            <!-- Banner chào mừng -->
+            <div class="welcome-banner mb-4">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h4 class="fw-bold mb-1">Xin chào, <span id="welcome-name">Admin</span>! 👋</h4>
+                        <p class="mb-0" style="opacity:.75">
+                            Hôm nay có <strong>128 nhân viên</strong> có mặt &amp;
+                            <strong>3 đơn nghỉ phép</strong> chờ duyệt.
+                        </p>
+                    </div>
+                    <div class="col-auto text-end">
+                        <div style="opacity:.5; font-size:12px">Tháng 04, 2026</div>
+                        <div id="clock" class="text-white">08:00:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 thẻ thống kê -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card bg-primary text-white">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="stat-value">142</div>
+                                <div class="stat-label">Tổng nhân viên</div>
+                                <small style="opacity:.7">↑ 5 người so với tháng trước</small>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-success text-white">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="stat-value">128</div>
+                                <div class="stat-label">Có mặt hôm nay</div>
+                                <small style="opacity:.7">14 người vắng mặt</small>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-warning text-white">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="stat-value">7</div>
+                                <div class="stat-label">Đang nghỉ phép</div>
+                                <small style="opacity:.7">3 đơn chờ duyệt</small>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-calendar-xmark"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-info text-white">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="stat-value">1.2 tỷ</div>
+                                <div class="stat-label">Lương tháng 04</div>
+                                <small style="opacity:.7">Chưa thanh toán</small>
+                            </div>
+                            <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <a class="quick-btn" onclick="showSection('employee')">
+                        <i class="fas fa-user-plus" style="color:#6366f1"></i>
+                        Thêm nhân viên
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a class="quick-btn" onclick="showSection('attendance')">
+                        <i class="fas fa-fingerprint" style="color:#10b981"></i>
+                        Chấm công
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a class="quick-btn" onclick="showSection('leave')">
+                        <i class="fas fa-paper-plane" style="color:#f59e0b"></i>
+                        Xin nghỉ phép
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a class="quick-btn" onclick="showSection('payroll')">
+                        <i class="fas fa-calculator" style="color:#06b6d4"></i>
+                        Tính lương
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bảng nhân viên gần đây -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-users text-primary me-2"></i>Nhân viên gần đây
+                    </div>
+                    <button class="btn btn-sm btn-indigo" onclick="showSection('employee')">
+                        Xem tất cả <i class="fas fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Nhân viên</th>
+                                <th>Phòng ban</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-emp-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-dashboard -->
+
+        <!-- ============== SECTION: NHÂN VIÊN ============== -->
+        <div class="section" id="section-employee">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-users text-primary me-2"></i>Quản lý nhân viên
+                    </div>
+                    <div class="d-flex gap-2">
+                        <!-- Ô tìm kiếm -->
+                        <input type="text" class="form-control form-control-sm" id="emp-search"
+                               placeholder="Tìm theo tên, email..." style="width:220px"
+                               oninput="filterEmployees()">
+                        <!-- Nút thêm mới -->
+                        <button class="btn btn-sm btn-indigo" onclick="openEmpModal()">
+                            <i class="fas fa-plus me-1"></i> Thêm nhân viên
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Nhân viên</th>
+                                <th>Số điện thoại</th>
+                                <th>Phòng ban</th>
+                                <th>Chức vụ</th>
+                                <th>Vai trò</th>
+                                <th>Lương cơ bản</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-employee -->
+
+        <!-- ============== SECTION: PHÒNG BAN ============== -->
+        <div class="section" id="section-department">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-building text-primary me-2"></i>Quản lý phòng ban
+                    </div>
+                    <button class="btn btn-sm btn-indigo" onclick="openDeptModal()">
+                        <i class="fas fa-plus me-1"></i> Thêm phòng ban
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Tên phòng ban</th>
+                                <th>Quản lý</th>
+                                <th>Số nhân viên</th>
+                                <th>Mô tả</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="department-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-department -->
+
+        <!-- ============== SECTION: CHỨC VỤ ============== -->
+        <div class="section" id="section-position">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-briefcase text-primary me-2"></i>Quản lý chức vụ
+                    </div>
+                    <button class="btn btn-sm btn-indigo" onclick="openPosModal()">
+                        <i class="fas fa-plus me-1"></i> Thêm chức vụ
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Tên chức vụ</th>
+                                <th>Phòng ban</th>
+                                <th>Mức lương tối thiểu</th>
+                                <th>Mức lương tối đa</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="position-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-position -->
+
+        <!-- ============== SECTION: CHẤM CÔNG ============== -->
+        <div class="section" id="section-attendance">
+            <div class="row g-3 mb-4">
+                <!-- Nút check-in / check-out -->
+                <div class="col-md-6">
+                    <div class="table-card p-4 text-center">
+                        <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                        <h6 class="fw-bold">Chấm công hôm nay</h6>
+                        <p class="text-muted small mb-3">Thứ Ba, 21/04/2026</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button class="btn btn-success px-4" id="btn-checkin" onclick="doCheckIn()">
+                                <i class="fas fa-sign-in-alt me-1"></i> Check-in
+                            </button>
+                            <button class="btn btn-danger px-4" id="btn-checkout" onclick="doCheckOut()">
+                                <i class="fas fa-sign-out-alt me-1"></i> Check-out
+                            </button>
+                        </div>
+                        <div id="checkin-status" class="mt-3 text-muted small"></div>
+                    </div>
+                </div>
+                <!-- Tóm tắt hôm nay -->
+                <div class="col-md-6">
+                    <div class="table-card p-4">
+                        <h6 class="fw-bold mb-3">Thống kê hôm nay</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Đúng giờ</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="width:100px;height:6px">
+                                    <div class="progress-bar bg-success" style="width:75%"></div>
+                                </div>
+                                <strong class="text-success small">96</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Đi muộn</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="width:100px;height:6px">
+                                    <div class="progress-bar bg-warning" style="width:25%"></div>
+                                </div>
+                                <strong class="text-warning small">32</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Vắng mặt</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="width:100px;height:6px">
+                                    <div class="progress-bar bg-danger" style="width:11%"></div>
+                                </div>
+                                <strong class="text-danger small">14</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng lịch sử chấm công -->
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-list-check text-primary me-2"></i>Lịch sử chấm công
+                    </div>
+                    <!-- Lọc theo tháng -->
+                    <input type="month" class="form-control form-control-sm" style="width:160px"
+                           value="2026-04" id="att-month">
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Nhân viên</th>
+                                <th>Ngày</th>
+                                <th>Giờ vào</th>
+                                <th>Giờ ra</th>
+                                <th>Số giờ làm</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-attendance -->
+
+        <!-- ============== SECTION: NGHỈ PHÉP ============== -->
+        <div class="section" id="section-leave">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-calendar-xmark text-primary me-2"></i>Quản lý nghỉ phép
+                    </div>
+                    <button class="btn btn-sm btn-indigo" onclick="openLeaveModal()">
+                        <i class="fas fa-plus me-1"></i> Tạo đơn nghỉ
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Nhân viên</th>
+                                <th>Từ ngày</th>
+                                <th>Đến ngày</th>
+                                <th>Số ngày</th>
+                                <th>Lý do</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leave-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-leave -->
+
+        <!-- ============== SECTION: BẢNG LƯƠNG ============== -->
+        <div class="section" id="section-payroll">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <div class="table-card-title">
+                        <i class="fas fa-money-bill-wave text-primary me-2"></i>Bảng lương
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="month" class="form-control form-control-sm"
+                               style="width:160px" value="2026-04" id="payroll-month">
+                        <button class="btn btn-sm btn-indigo" onclick="calculatePayroll()">
+                            <i class="fas fa-calculator me-1"></i> Tính lương
+                        </button>
+                    </div>
+                </div>
+                <!-- Tổng hợp lương -->
+                <div class="row g-0 border-bottom">
+                    <div class="col-md-4 p-3 border-end text-center">
+                        <div class="text-muted small">Tổng lương phải trả</div>
+                        <div class="fs-4 fw-bold text-primary" id="total-salary">1.245.000.000 ₫</div>
+                    </div>
+                    <div class="col-md-4 p-3 border-end text-center">
+                        <div class="text-muted small">Số nhân viên</div>
+                        <div class="fs-4 fw-bold">142</div>
+                    </div>
+                    <div class="col-md-4 p-3 text-center">
+                        <div class="text-muted small">Lương bình quân</div>
+                        <div class="fs-4 fw-bold text-success">8.767.606 ₫</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Nhân viên</th>
+                                <th>Phòng ban</th>
+                                <th>Lương cơ bản</th>
+                                <th>Phụ cấp</th>
+                                <th>Khấu trừ</th>
+                                <th>Thực nhận</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payroll-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /section-payroll -->
+
+    </div><!-- /p-4 -->
+</div><!-- /main-content -->
+
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Modal: Thêm / Sửa Nhân viên -->
+<div class="modal fade" id="employee-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emp-modal-title">Thêm nhân viên mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="emp-id">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="emp-name" placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="emp-email" placeholder="nv@company.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Số điện thoại</label>
+                        <input type="tel" class="form-control" id="emp-phone" placeholder="0901 234 567">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Phòng ban <span class="text-danger">*</span></label>
+                        <select class="form-select" id="emp-dept">
+                            <option value="">-- Chọn phòng ban --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Chức vụ <span class="text-danger">*</span></label>
+                        <select class="form-select" id="emp-position">
+                            <option value="">-- Chọn chức vụ --</option>
+                            <option>Developer</option>
+                            <option>Designer</option>
+                            <option>Manager</option>
+                            <option>HR Specialist</option>
+                            <option>Accountant</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Vai trò <span class="text-danger">*</span></label>
+                        <select class="form-select" id="emp-role">
+                            <option value="EMPLOYEE">EMPLOYEE</option>
+                            <option value="MANAGER">MANAGER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Lương cơ bản (VNĐ)</label>
+                        <input type="number" class="form-control" id="emp-salary" placeholder="15000000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Trạng thái</label>
+                        <select class="form-select" id="emp-status">
+                            <option value="active">Hoạt động</option>
+                            <option value="inactive">Vô hiệu hóa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-indigo" onclick="saveEmployee()">
+                    <i class="fas fa-save me-1"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Thêm / Sửa Phòng ban -->
+<div class="modal fade" id="department-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dept-modal-title">Thêm phòng ban mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="dept-id">
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Tên phòng ban <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="dept-name" placeholder="VD: Kỹ thuật">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Quản lý phòng ban</label>
+                    <input type="text" class="form-control" id="dept-manager" placeholder="Tên người quản lý">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Mô tả</label>
+                    <textarea class="form-control" id="dept-desc" rows="3" placeholder="Mô tả ngắn về phòng ban..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-indigo" onclick="saveDept()">
+                    <i class="fas fa-save me-1"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Thêm / Sửa Chức vụ -->
+<div class="modal fade" id="position-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pos-modal-title">Thêm chức vụ mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pos-id">
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Tên chức vụ <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="pos-name" placeholder="VD: Senior Developer">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Thuộc phòng ban</label>
+                    <select class="form-select" id="pos-dept">
+                        <option value="">-- Chọn phòng ban --</option>
+                    </select>
+                </div>
+                <div class="row g-2">
+                    <div class="col">
+                        <label class="form-label fw-medium">Lương tối thiểu</label>
+                        <input type="number" class="form-control" id="pos-min" placeholder="10000000">
+                    </div>
+                    <div class="col">
+                        <label class="form-label fw-medium">Lương tối đa</label>
+                        <input type="number" class="form-control" id="pos-max" placeholder="30000000">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-indigo" onclick="savePosition()">
+                    <i class="fas fa-save me-1"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Tạo đơn nghỉ phép -->
+<div class="modal fade" id="leave-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo đơn xin nghỉ phép</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Nhân viên</label>
+                    <select class="form-select" id="leave-employee">
+                        <option value="">-- Chọn nhân viên --</option>
+                    </select>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label class="form-label fw-medium">Từ ngày <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="leave-from">
+                    </div>
+                    <div class="col">
+                        <label class="form-label fw-medium">Đến ngày <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="leave-to">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Lý do <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="leave-reason" rows="3" placeholder="Nhập lý do xin nghỉ..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-indigo" onclick="saveLeave()">
+                    <i class="fas fa-paper-plane me-1"></i> Gửi đơn
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Xác nhận xóa -->
+<div class="modal fade" id="confirm-modal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-msg">Bạn có chắc muốn xóa không?</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-danger btn-sm" id="confirm-ok">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ===================== SCRIPTS ===================== -->
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+// ===================================================
+//  DỮ LIỆU MẪU (mock data – sẽ thay bằng API sau)
+// ===================================================
+let employees = [
+    { id:1, name:'Nguyễn Văn An',   email:'an@company.com',     phone:'0901111111', dept:'Kỹ thuật',   position:'Developer',    role:'ADMIN',    salary:25000000, status:'active',   color:'#6366f1' },
+    { id:2, name:'Trần Thị Bình',   email:'binh@company.com',   phone:'0902222222', dept:'Nhân sự',    position:'HR Specialist', role:'MANAGER', salary:18000000, status:'active',   color:'#8b5cf6' },
+    { id:3, name:'Lê Minh Châu',    email:'chau@company.com',   phone:'0903333333', dept:'Kế toán',    position:'Accountant',   role:'EMPLOYEE', salary:14000000, status:'active',   color:'#06b6d4' },
+    { id:4, name:'Phạm Thị Dung',   email:'dung@company.com',   phone:'0904444444', dept:'Marketing',  position:'Designer',     role:'EMPLOYEE', salary:13000000, status:'inactive', color:'#ec4899' },
+    { id:5, name:'Hoàng Văn Em',    email:'em@company.com',     phone:'0905555555', dept:'Kỹ thuật',   position:'Developer',    role:'EMPLOYEE', salary:15000000, status:'active',   color:'#10b981' },
+    { id:6, name:'Võ Thị Phương',   email:'phuong@company.com', phone:'0906666666', dept:'Marketing',  position:'Designer',     role:'MANAGER',  salary:20000000, status:'active',   color:'#f59e0b' },
+];
+
+let departments = [
+    { id:1, name:'Kỹ thuật',  manager:'Nguyễn Văn An',  count:45, desc:'Phát triển sản phẩm phần mềm' },
+    { id:2, name:'Nhân sự',   manager:'Trần Thị Bình',  count:12, desc:'Quản lý nhân sự và tuyển dụng' },
+    { id:3, name:'Kế toán',   manager:'Lê Minh Châu',   count:8,  desc:'Kế toán và tài chính' },
+    { id:4, name:'Marketing', manager:'Võ Thị Phương',  count:20, desc:'Truyền thông và marketing' },
+];
+
+let positions = [
+    { id:1, name:'Developer',    dept:'Kỹ thuật',  minSalary:12000000, maxSalary:35000000 },
+    { id:2, name:'Designer',     dept:'Marketing', minSalary:10000000, maxSalary:25000000 },
+    { id:3, name:'HR Specialist',dept:'Nhân sự',   minSalary:10000000, maxSalary:22000000 },
+    { id:4, name:'Accountant',   dept:'Kế toán',   minSalary:10000000, maxSalary:20000000 },
+    { id:5, name:'Manager',      dept:'Tất cả',    minSalary:18000000, maxSalary:40000000 },
+];
+
+let attendances = [
+    { emp:'Nguyễn Văn An',  date:'21/04/2026', checkIn:'08:02', checkOut:'17:05', hours:9.05, status:'Đúng giờ' },
+    { emp:'Trần Thị Bình',  date:'21/04/2026', checkIn:'08:45', checkOut:'17:00', hours:8.25, status:'Đi muộn'  },
+    { emp:'Lê Minh Châu',   date:'21/04/2026', checkIn:'07:55', checkOut:'17:10', hours:9.25, status:'Đúng giờ' },
+    { emp:'Hoàng Văn Em',   date:'21/04/2026', checkIn:'',      checkOut:'',      hours:0,    status:'Vắng mặt' },
+    { emp:'Võ Thị Phương',  date:'21/04/2026', checkIn:'08:10', checkOut:'17:00', hours:8.83, status:'Đúng giờ' },
+];
+
+let leaveRequests = [
+    { id:1, emp:'Trần Thị Bình', from:'22/04/2026', to:'23/04/2026', days:2, reason:'Việc gia đình',    status:'PENDING'  },
+    { id:2, emp:'Lê Minh Châu',  from:'25/04/2026', to:'25/04/2026', days:1, reason:'Khám bệnh',       status:'PENDING'  },
+    { id:3, emp:'Hoàng Văn Em',  from:'28/04/2026', to:'28/04/2026', days:1, reason:'Nghỉ cá nhân',    status:'PENDING'  },
+    { id:4, emp:'Nguyễn Văn An', from:'15/04/2026', to:'15/04/2026', days:1, reason:'Việc cá nhân',    status:'APPROVED' },
+    { id:5, emp:'Võ Thị Phương', from:'10/04/2026', to:'11/04/2026', days:2, reason:'Đám cưới anh họ', status:'REJECTED' },
+];
+
+// ===================================================
+//  ĐIỀU HƯỚNG – HIỆN / ẨN SECTION
+// ===================================================
+// Map tên section → tiêu đề hiển thị trên header
+const sectionTitles = {
+    dashboard:  'Dashboard',
+    employee:   'Quản lý nhân viên',
+    department: 'Quản lý phòng ban',
+    position:   'Quản lý chức vụ',
+    attendance: 'Chấm công',
+    leave:      'Nghỉ phép',
+    payroll:    'Bảng lương',
+};
+
+function showSection(name) {
+    // Ẩn tất cả sections
+    $('.section').removeClass('active');
+    // Hiện section được chọn
+    $('#section-' + name).addClass('active');
+
+    // Bỏ active tất cả nav links, active cái đang chọn
+    $('.nav-item-link').removeClass('active');
+    $('#nav-' + name).addClass('active');
+
+    // Cập nhật tiêu đề header
+    $('#header-title').text(sectionTitles[name] || name);
+}
+
+// ===================================================
+//  ĐỒNG HỒ REALTIME
+// ===================================================
+function updateClock() {
+    const now  = new Date();
+    const pad  = n => String(n).padStart(2, '0');
+    const days = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const date = `${days[now.getDay()]}, ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
+
+    $('#clock').text(time);
+    $('#header-date').text(date);
+}
+updateClock();
+setInterval(updateClock, 1000); // cập nhật mỗi giây
+
+// ===================================================
+//  LOAD THÔNG TIN USER TỪ LOCALSTORAGE
+// ===================================================
+function loadUserInfo() {
+    const user = JSON.parse(localStorage.getItem('user') || '{"name":"Admin","role":"ADMIN"}');
+    const name = user.name || 'Admin';
+    const role = user.role || 'ADMIN';
+
+    // Lấy 2 chữ cái đầu làm avatar chữ
+    const initials = name.split(' ').slice(-2).map(w => w[0]).join('').toUpperCase();
+
+    $('#sidebar-avatar').text(initials);
+    $('#sidebar-name').text(name);
+    $('#sidebar-role').text(role);
+    $('#welcome-name').text(name.split(' ').pop()); // Tên cuối cùng
+}
+loadUserInfo();
+
+// ===================================================
+//  ĐĂNG XUẤT
+// ===================================================
+function handleLogout() {
+    if (!confirm('Bạn có chắc muốn đăng xuất không?')) return;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/login.html';
+}
+
+// ===================================================
+//  HELPER: FORMAT TIỀN VIỆT NAM
+// ===================================================
+function formatVND(n) {
+    return Number(n).toLocaleString('vi-VN') + ' ₫';
+}
+
+// ===================================================
+//  HELPER: BADGE ROLE
+// ===================================================
+function roleBadge(role) {
+    const colors = { ADMIN:'primary', MANAGER:'purple', EMPLOYEE:'info' };
+    const color  = colors[role] || 'secondary';
+    return `<span class="badge bg-${color}">${role}</span>`;
+}
+
+// ===================================================
+//  HELPER: BADGE TRẠNG THÁI
+// ===================================================
+function statusBadge(status) {
+    if (status === 'active')   return '<span class="badge bg-success">Hoạt động</span>';
+    if (status === 'inactive') return '<span class="badge bg-danger">Vô hiệu hóa</span>';
+    if (status === 'PENDING')  return '<span class="badge bg-warning text-dark">Chờ duyệt</span>';
+    if (status === 'APPROVED') return '<span class="badge bg-success">Đã duyệt</span>';
+    if (status === 'REJECTED') return '<span class="badge bg-danger">Từ chối</span>';
+    return `<span class="badge bg-secondary">${status}</span>`;
+}
+
+// ===================================================
+//  AVATAR MÀU NGẪU NHIÊN
+// ===================================================
+function empAvatar(emp) {
+    const initials = emp.name.split(' ').slice(-2).map(w => w[0]).join('').toUpperCase();
+    return `<span class="emp-avatar me-2" style="background:${emp.color}">${initials}</span>`;
+}
+
+// ===================================================
+//  DASHBOARD – Hiện nhân viên gần đây (5 người)
+// ===================================================
+function renderDashboardEmployees() {
+    const recent = employees.slice(0, 5); // Lấy 5 người đầu
+    let html = '';
+    recent.forEach(function(emp) {
+        html += `<tr>
+            <td class="ps-3">
+                <div class="d-flex align-items-center">
+                    ${empAvatar(emp)}
+                    <div>
+                        <div class="fw-medium" style="font-size:13px">${emp.name}</div>
+                        <div class="text-muted" style="font-size:11px">${emp.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="text-muted" style="font-size:13px">${emp.dept}</td>
+            <td>${roleBadge(emp.role)}</td>
+            <td>${statusBadge(emp.status)}</td>
+        </tr>`;
+    });
+    $('#dashboard-emp-tbody').html(html);
+}
+renderDashboardEmployees();
+
+// ===================================================
+//  NHÂN VIÊN – Render bảng
+// ===================================================
+function renderEmployees(list) {
+    // Dùng list nếu có (khi tìm kiếm), không thì dùng toàn bộ
+    const data = list || employees;
+    let html = '';
+    data.forEach(function(emp, i) {
+        html += `<tr>
+            <td class="ps-3 text-muted">${i + 1}</td>
+            <td>
+                <div class="d-flex align-items-center">
+                    ${empAvatar(emp)}
+                    <div>
+                        <div class="fw-medium" style="font-size:13px">${emp.name}</div>
+                        <div class="text-muted" style="font-size:11px">${emp.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td style="font-size:13px">${emp.phone}</td>
+            <td style="font-size:13px">${emp.dept}</td>
+            <td style="font-size:13px">${emp.position}</td>
+            <td>${roleBadge(emp.role)}</td>
+            <td style="font-size:13px">${formatVND(emp.salary)}</td>
+            <td>${statusBadge(emp.status)}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openEmpModal(${emp.id})">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('employee', ${emp.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    });
+    $('#employee-tbody').html(html || '<tr><td colspan="9" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
+}
+renderEmployees();
+
+// Tìm kiếm nhân viên theo tên hoặc email
+function filterEmployees() {
+    const keyword = $('#emp-search').val().toLowerCase().trim();
+    const filtered = employees.filter(function(emp) {
+        return emp.name.toLowerCase().includes(keyword) ||
+               emp.email.toLowerCase().includes(keyword);
+    });
+    renderEmployees(filtered);
+}
+
+// ===================================================
+//  NHÂN VIÊN – Mở modal thêm / sửa
+// ===================================================
+function openEmpModal(id) {
+    // Reset form trước
+    $('#emp-id').val('');
+    $('#emp-name, #emp-email, #emp-phone, #emp-salary').val('');
+    $('#emp-dept, #emp-position').val('');
+    $('#emp-role').val('EMPLOYEE');
+    $('#emp-status').val('active');
+    $('#emp-modal-title').text('Thêm nhân viên mới');
+
+    // Nếu có id → đang sửa → điền dữ liệu vào form
+    if (id) {
+        const emp = employees.find(e => e.id === id);
+        if (!emp) return;
+        $('#emp-modal-title').text('Chỉnh sửa nhân viên');
+        $('#emp-id').val(emp.id);
+        $('#emp-name').val(emp.name);
+        $('#emp-email').val(emp.email);
+        $('#emp-phone').val(emp.phone);
+        $('#emp-salary').val(emp.salary);
+        $('#emp-role').val(emp.role);
+        $('#emp-status').val(emp.status);
+        // Tìm và chọn dept, position
+        $('#emp-dept option').filter(function() {
+            return $(this).text() === emp.dept;
+        }).prop('selected', true);
+        $('#emp-position option').filter(function() {
+            return $(this).text() === emp.position;
+        }).prop('selected', true);
+    }
+
+    new bootstrap.Modal($('#employee-modal')[0]).show();
+}
+
+// ===================================================
+//  NHÂN VIÊN – Lưu (thêm mới hoặc cập nhật)
+// ===================================================
+function saveEmployee() {
+    const id   = parseInt($('#emp-id').val()) || null;
+    const name = $('#emp-name').val().trim();
+    const email= $('#emp-email').val().trim();
+
+    if (!name || !email) {
+        alert('Vui lòng nhập họ tên và email!');
+        return;
+    }
+
+    const empData = {
+        name:     name,
+        email:    email,
+        phone:    $('#emp-phone').val().trim(),
+        dept:     $('#emp-dept').val(),
+        position: $('#emp-position').val(),
+        role:     $('#emp-role').val(),
+        salary:   parseInt($('#emp-salary').val()) || 0,
+        status:   $('#emp-status').val(),
+        color:    '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'), // màu ngẫu nhiên
+    };
+
+    if (id) {
+        // Cập nhật nhân viên đã có
+        const index = employees.findIndex(e => e.id === id);
+        employees[index] = { ...employees[index], ...empData };
+    } else {
+        // Thêm nhân viên mới với id tự tăng
+        empData.id = Date.now();
+        employees.push(empData);
+    }
+
+    // Render lại bảng và đóng modal
+    renderEmployees();
+    renderDashboardEmployees();
+    bootstrap.Modal.getInstance($('#employee-modal')[0]).hide();
+}
+
+// ===================================================
+//  PHÒNG BAN – Render bảng
+// ===================================================
+function renderDepartments() {
+    let html = '';
+    departments.forEach(function(dept, i) {
+        html += `<tr>
+            <td class="ps-3 text-muted">${i + 1}</td>
+            <td class="fw-medium">${dept.name}</td>
+            <td style="font-size:13px">${dept.manager}</td>
+            <td><span class="badge bg-light text-dark border">${dept.count} người</span></td>
+            <td class="text-muted" style="font-size:13px">${dept.desc}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openDeptModal(${dept.id})">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('department', ${dept.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    });
+    $('#department-tbody').html(html || '<tr><td colspan="6" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
+
+    // Cập nhật dropdown chọn phòng ban trong các modal khác
+    const options = departments.map(d => `<option>${d.name}</option>`).join('');
+    $('#emp-dept, #pos-dept').html('<option value="">-- Chọn phòng ban --</option>' + options);
+}
+renderDepartments();
+
+// Mở modal phòng ban
+function openDeptModal(id) {
+    $('#dept-id').val('');
+    $('#dept-name, #dept-manager, #dept-desc').val('');
+    $('#dept-modal-title').text('Thêm phòng ban mới');
+
+    if (id) {
+        const dept = departments.find(d => d.id === id);
+        if (!dept) return;
+        $('#dept-modal-title').text('Chỉnh sửa phòng ban');
+        $('#dept-id').val(dept.id);
+        $('#dept-name').val(dept.name);
+        $('#dept-manager').val(dept.manager);
+        $('#dept-desc').val(dept.desc);
+    }
+    new bootstrap.Modal($('#department-modal')[0]).show();
+}
+
+// Lưu phòng ban
+function saveDept() {
+    const id   = parseInt($('#dept-id').val()) || null;
+    const name = $('#dept-name').val().trim();
+    if (!name) { alert('Vui lòng nhập tên phòng ban!'); return; }
+
+    const data = {
+        name:    name,
+        manager: $('#dept-manager').val().trim(),
+        desc:    $('#dept-desc').val().trim(),
+        count:   0,
+    };
+    if (id) {
+        const idx = departments.findIndex(d => d.id === id);
+        departments[idx] = { ...departments[idx], ...data };
+    } else {
+        data.id = Date.now();
+        departments.push(data);
+    }
+    renderDepartments();
+    bootstrap.Modal.getInstance($('#department-modal')[0]).hide();
+}
+
+// ===================================================
+//  CHỨC VỤ – Render bảng
+// ===================================================
+function renderPositions() {
+    let html = '';
+    positions.forEach(function(pos, i) {
+        html += `<tr>
+            <td class="ps-3 text-muted">${i + 1}</td>
+            <td class="fw-medium">${pos.name}</td>
+            <td style="font-size:13px">${pos.dept}</td>
+            <td style="font-size:13px">${formatVND(pos.minSalary)}</td>
+            <td style="font-size:13px">${formatVND(pos.maxSalary)}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openPosModal(${pos.id})">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('position', ${pos.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    });
+    $('#position-tbody').html(html || '<tr><td colspan="6" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
+}
+renderPositions();
+
+function openPosModal(id) {
+    $('#pos-id').val(''); $('#pos-name, #pos-min, #pos-max').val(''); $('#pos-dept').val('');
+    $('#pos-modal-title').text('Thêm chức vụ mới');
+    if (id) {
+        const pos = positions.find(p => p.id === id);
+        if (!pos) return;
+        $('#pos-modal-title').text('Chỉnh sửa chức vụ');
+        $('#pos-id').val(pos.id);
+        $('#pos-name').val(pos.name);
+        $('#pos-min').val(pos.minSalary);
+        $('#pos-max').val(pos.maxSalary);
+    }
+    new bootstrap.Modal($('#position-modal')[0]).show();
+}
+
+function savePosition() {
+    const id   = parseInt($('#pos-id').val()) || null;
+    const name = $('#pos-name').val().trim();
+    if (!name) { alert('Vui lòng nhập tên chức vụ!'); return; }
+    const data = { name, dept: $('#pos-dept').val(), minSalary: parseInt($('#pos-min').val())||0, maxSalary: parseInt($('#pos-max').val())||0 };
+    if (id) { const i = positions.findIndex(p => p.id === id); positions[i] = {...positions[i], ...data}; }
+    else    { data.id = Date.now(); positions.push(data); }
+    renderPositions();
+    bootstrap.Modal.getInstance($('#position-modal')[0]).hide();
+}
+
+// ===================================================
+//  CHẤM CÔNG – Render bảng
+// ===================================================
+function renderAttendances() {
+    let html = '';
+    attendances.forEach(function(att) {
+        const statusColor = att.status === 'Đúng giờ' ? 'success' :
+                            att.status === 'Đi muộn'  ? 'warning' : 'danger';
+        html += `<tr>
+            <td class="ps-3 fw-medium">${att.emp}</td>
+            <td style="font-size:13px">${att.date}</td>
+            <td style="font-size:13px">${att.checkIn  || '—'}</td>
+            <td style="font-size:13px">${att.checkOut || '—'}</td>
+            <td style="font-size:13px">${att.hours ? att.hours + 'h' : '—'}</td>
+            <td><span class="badge bg-${statusColor}">${att.status}</span></td>
+        </tr>`;
+    });
+    $('#attendance-tbody').html(html);
+}
+renderAttendances();
+
+// Giả lập check-in / check-out
+function doCheckIn() {
+    const time = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+    $('#checkin-status').html(`<span class="text-success"><i class="fas fa-check-circle me-1"></i>Đã check-in lúc <strong>${time}</strong></span>`);
+    $('#btn-checkin').prop('disabled', true).addClass('opacity-50');
+}
+function doCheckOut() {
+    const time = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+    $('#checkin-status').html(`<span class="text-danger"><i class="fas fa-check-circle me-1"></i>Đã check-out lúc <strong>${time}</strong></span>`);
+    $('#btn-checkout').prop('disabled', true).addClass('opacity-50');
+}
+
+// ===================================================
+//  NGHỈ PHÉP – Render bảng
+// ===================================================
+function renderLeaveRequests() {
+    let pending = 0;
+    let html    = '';
+    leaveRequests.forEach(function(leave, i) {
+        if (leave.status === 'PENDING') pending++;
+        const canApprove = leave.status === 'PENDING';
+        html += `<tr>
+            <td class="ps-3 text-muted">${i + 1}</td>
+            <td class="fw-medium">${leave.emp}</td>
+            <td style="font-size:13px">${leave.from}</td>
+            <td style="font-size:13px">${leave.to}</td>
+            <td><span class="badge bg-light text-dark border">${leave.days} ngày</span></td>
+            <td class="text-muted" style="font-size:13px">${leave.reason}</td>
+            <td>${statusBadge(leave.status)}</td>
+            <td class="text-center">
+                ${canApprove ? `
+                <button class="btn btn-sm btn-success me-1" onclick="approveLeave(${leave.id})">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="rejectLeave(${leave.id})">
+                    <i class="fas fa-times"></i>
+                </button>` : '—'}
+            </td>
+        </tr>`;
+    });
+    $('#leave-tbody').html(html);
+    // Cập nhật số badge
+    $('#leave-badge').text(pending).toggle(pending > 0);
+}
+renderLeaveRequests();
+
+// Mở modal tạo đơn – điền dropdown nhân viên
+function openLeaveModal() {
+    $('#leave-employee').html('<option value="">-- Chọn nhân viên --</option>' +
+        employees.map(e => `<option>${e.name}</option>`).join(''));
+    $('#leave-from, #leave-to, #leave-reason').val('');
+    new bootstrap.Modal($('#leave-modal')[0]).show();
+}
+
+// Lưu đơn nghỉ mới
+function saveLeave() {
+    const from = $('#leave-from').val();
+    const to   = $('#leave-to').val();
+    const emp  = $('#leave-employee').val();
+    if (!emp || !from || !to || !$('#leave-reason').val()) {
+        alert('Vui lòng điền đầy đủ thông tin!');
+        return;
+    }
+    // Tính số ngày (đơn giản)
+    const diff = Math.ceil((new Date(to) - new Date(from)) / 86400000) + 1;
+
+    leaveRequests.push({
+        id:     Date.now(),
+        emp:    emp,
+        from:   from.split('-').reverse().join('/'),
+        to:     to.split('-').reverse().join('/'),
+        days:   diff,
+        reason: $('#leave-reason').val().trim(),
+        status: 'PENDING',
+    });
+    renderLeaveRequests();
+    bootstrap.Modal.getInstance($('#leave-modal')[0]).hide();
+}
+
+// Duyệt đơn
+function approveLeave(id) {
+    const leave = leaveRequests.find(l => l.id === id);
+    if (leave) { leave.status = 'APPROVED'; renderLeaveRequests(); }
+}
+
+// Từ chối đơn
+function rejectLeave(id) {
+    const leave = leaveRequests.find(l => l.id === id);
+    if (leave) { leave.status = 'REJECTED'; renderLeaveRequests(); }
+}
+
+// ===================================================
+//  BẢNG LƯƠNG – Render
+// ===================================================
+function renderPayroll() {
+    let html = '';
+    employees.forEach(function(emp) {
+        const bonus   = Math.round(emp.salary * 0.1);          // Phụ cấp 10%
+        const deduct  = emp.status === 'inactive' ? emp.salary : 0; // Trừ nếu inactive
+        const total   = emp.salary + bonus - deduct;
+        const isPaid  = emp.status === 'active';
+        html += `<tr>
+            <td class="ps-3">
+                <div class="d-flex align-items-center">
+                    ${empAvatar(emp)}
+                    <div>
+                        <div class="fw-medium" style="font-size:13px">${emp.name}</div>
+                        <div class="text-muted" style="font-size:11px">${emp.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td style="font-size:13px">${emp.dept}</td>
+            <td style="font-size:13px">${formatVND(emp.salary)}</td>
+            <td style="font-size:13px" class="text-success">+${formatVND(bonus)}</td>
+            <td style="font-size:13px" class="text-danger">-${formatVND(deduct)}</td>
+            <td class="fw-bold">${formatVND(total)}</td>
+            <td>${isPaid
+                ? '<span class="badge bg-warning text-dark">Chưa trả</span>'
+                : '<span class="badge bg-danger">Đã khấu trừ</span>'}</td>
+        </tr>`;
+    });
+    $('#payroll-tbody').html(html);
+}
+renderPayroll();
+
+// Tính lương (giả lập – sẽ gọi API /api/v1/payrolls/calculate sau)
+function calculatePayroll() {
+    const month = $('#payroll-month').val();
+    alert(`Đang tính lương cho tháng ${month}...\n(Backend chưa sẵn sàng)`);
+}
+
+// ===================================================
+//  XÓA DÒNG (dùng chung cho employee, department, position)
+// ===================================================
+function deleteRow(type, id) {
+    // Hiện modal xác nhận
+    $('#confirm-msg').text(`Bạn có chắc muốn xóa không? Hành động này không thể hoàn tác.`);
+
+    // Xác nhận → thực hiện xóa
+    $('#confirm-ok').off('click').on('click', function() {
+        if (type === 'employee') {
+            employees   = employees.filter(e => e.id !== id);
+            renderEmployees();
+            renderDashboardEmployees();
+        }
+        if (type === 'department') {
+            departments = departments.filter(d => d.id !== id);
+            renderDepartments();
+        }
+        if (type === 'position') {
+            positions   = positions.filter(p => p.id !== id);
+            renderPositions();
+        }
+        bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
+    });
+
+    new bootstrap.Modal($('#confirm-modal')[0]).show();
+}
+</script>
+
+</body>
+</html>

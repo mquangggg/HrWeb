@@ -3,13 +3,13 @@ package com.hrmanagement.hr_management.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.*;
 
 @Entity
 @Table(name = "departments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Department {
 
     @Id
@@ -34,4 +34,7 @@ public class Department {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Employee> employees = new HashSet<>();
 }

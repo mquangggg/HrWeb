@@ -11,7 +11,6 @@ import java.time.LocalTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Attendance {
 
     @Id
@@ -33,6 +32,5 @@ public class Attendance {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private AttendanceStatus status = AttendanceStatus.present;
 }

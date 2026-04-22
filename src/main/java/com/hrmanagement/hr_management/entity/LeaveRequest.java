@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class LeaveRequest {
 
     @Id
@@ -34,7 +33,6 @@ public class LeaveRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private LeaveStatus status = LeaveStatus.pending;
 
     // Người duyệt đơn (MANAGER/ADMIN)

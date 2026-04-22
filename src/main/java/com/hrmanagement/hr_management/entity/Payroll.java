@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Payroll {
 
     @Id
@@ -30,18 +29,15 @@ public class Payroll {
     private Integer workingDays;
 
     @Column(name = "absent_days")
-    @Builder.Default
     private Integer absentDays = 0;
 
     @Column(name = "base_salary", precision = 15, scale = 2)
     private BigDecimal baseSalary;
 
     @Column(precision = 15, scale = 2)
-    @Builder.Default
     private BigDecimal allowance = BigDecimal.ZERO;
 
     @Column(precision = 15, scale = 2)
-    @Builder.Default
     private BigDecimal deduction = BigDecimal.ZERO;
 
     @Column(name = "net_salary", precision = 15, scale = 2)

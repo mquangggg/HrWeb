@@ -15,7 +15,6 @@ import com.hrmanagement.hr_management.enums.Role;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Employee {
 
     @Id
@@ -50,11 +49,9 @@ public class Employee {
     private Role role;
 
     @Column(name = "base_salary", precision = 15, scale = 2)
-    @Builder.Default
     private BigDecimal baseSalary = BigDecimal.ZERO;
 
     @Column(name = "allowance", precision = 15, scale = 2)
-    @Builder.Default
     private BigDecimal allowance = BigDecimal.ZERO;
 
     @Column(name = "start_date")
@@ -62,12 +59,10 @@ public class Employee {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private EmployeeStatus status = EmployeeStatus.active;
 
     // Quan hệ 1-nhiều với Attendance
     @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private Set<Attendance> attendances = new HashSet<>();
     // cascade = CascadeType.ALL => nhân viên được xóa thì nhân viên đó sẽ được xóa
     // các quan hệ khác
@@ -75,21 +70,17 @@ public class Employee {
 
     // Nhân viên tạo đơn xin nghỉ phép
     @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private Set<LeaveRequest> leaveRequests = new HashSet<>();
 
     // Nhân viên duyệt đơn xin nghỉ phép
     @OneToMany(mappedBy = "approvedBy", fetch = FetchType.LAZY)
-    @Builder.Default
     private Set<LeaveRequest> approvedLeaveRequests = new HashSet<>();
 
     // Nhân viên tạo bảng lương
     @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private Set<Payroll> payrolls = new HashSet<>();
 
     // Nhân viên quản lý department
     @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
-    @Builder.Default
     private Set<Department> managedDepartments = new HashSet<>();
 }

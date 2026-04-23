@@ -994,15 +994,40 @@ updateClock();
 setInterval(updateClock, 1000); // cập nhật mỗi giây
 
 // ===================================================
-//  LOAD THÔNG TIN USER TỪ LOCALSTORAGE
+//  LOAD THÔNG TIN USER TỪ LOCALSTORAGE VÀ URL
 // ===================================================
 function loadUserInfo() {
-    const user = JSON.parse(localStorage.getItem('user') || '{"name":"Admin","role":"ADMIN"}');
+    // Nếu có token trên URL (từ đăng nhập Google), lưu vào localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        // Xóa token khỏi URL để bảo mật
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    const userStr = localStorage.getItem('user');
+    let user = { name: 'Người dùng', role: 'EMPLOYEE' };
+    
+    if (userStr) {
+        try {
+            user = JSON.parse(userStr);
+        } catch (e) {
+            console.log("Error parsing user from localStorage");
+        }
+    } else if (urlToken) {
+        // Nếu vừa đăng nhập Google xong mà chưa có user object, 
+        // tạm thời gán là Google User. Tốt nhất là gọi API lấy info.
+        user.name = "Google User";
+        user.role = "EMPLOYEE";
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+
     const name = user.name || 'Admin';
     const role = user.role || 'ADMIN';
 
     // Lấy 2 chữ cái đầu làm avatar chữ
-    const initials = name.split(' ').slice(-2).map(w => w[0]).join('').toUpperCase();
+    const initials = name.split(' ').slice(-2).map(w => w[0] || '').join('').toUpperCase();
 
     $('#sidebar-avatar').text(initials);
     $('#sidebar-name').text(name);

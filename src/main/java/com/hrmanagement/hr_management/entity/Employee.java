@@ -83,4 +83,13 @@ public class Employee {
     // Nhân viên quản lý department
     @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
     private Set<Department> managedDepartments = new HashSet<>();
+
+    // Quản lý trực tiếp (cấp trên)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Employee manager;
+
+    // Danh sách nhân viên cấp dưới
+    @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
+    private Set<Employee> subordinates = new HashSet<>();
 }

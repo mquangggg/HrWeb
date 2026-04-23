@@ -1,5 +1,20 @@
 package com.hrmanagement.hr_management.dto.request;
 
-public class LeaveRequest {
+import java.time.LocalDate;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
+public class LeaveRequest {
+    
+    @NotNull(message = "Ngày bắt đầu không được để trống")
+    private LocalDate startDate;
+    
+    @NotNull(message = "Ngày kết thúc không được để trống")
+    private LocalDate endDate;
+    
+    @NotBlank(message = "Lý do không được để trống")
+    private String reason;
 }

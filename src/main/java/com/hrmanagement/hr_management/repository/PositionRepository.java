@@ -1,5 +1,8 @@
 package com.hrmanagement.hr_management.repository;
 
-public class PositionRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.hrmanagement.hr_management.entity.Position;
+
+public interface PositionRepository extends JpaRepository<Position, Long> {
 
 }

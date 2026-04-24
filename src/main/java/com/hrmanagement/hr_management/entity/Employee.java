@@ -16,7 +16,7 @@ import com.hrmanagement.hr_management.enums.Role;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"password", "attendances", "leaveRequests", "approvedLeaveRequests", "payrolls", "managedDepartments", "manager", "subordinates" ,"department","position"})
+@ToString(exclude = {"password", "attendances", "leaveRequests", "approvedLeaveRequests", "payrolls", "manager", "subordinates" ,"department","position"})
 public class Employee {
 
     @Id

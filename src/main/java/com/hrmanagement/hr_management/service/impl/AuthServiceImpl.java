@@ -97,4 +97,26 @@ public class AuthServiceImpl implements AuthService {
 
         return login(loginRequest);
     }
+
+    @Override
+    public EmployeeResponse getMe() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return EmployeeResponse.builder()
+                .id(employee.getId())
+                .firstName(employee.getFirstName())
+                .lastName(employee.getLastName())
+                .email(employee.getEmail())
+                .phone(employee.getPhone())
+                .role(employee.getRole())
+                .baseSalary(employee.getBaseSalary())
+                .allowance(employee.getAllowance())
+                .startDate(employee.getStartDate())
+                .status(employee.getStatus())
+                .departmentName(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
+                .positionName(employee.getPosition() != null ? employee.getPosition().getName() : null)
+                .build();
+    }
 }

@@ -1,12 +1,10 @@
 package com.hrmanagement.hr_management.dto.request;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import com.hrmanagement.hr_management.enums.EmployeeStatus;
 import com.hrmanagement.hr_management.enums.Role;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -20,9 +18,6 @@ public class EmployeeUpdateRequest {
     @NotBlank(message = "Tên không được để trống")
     private String lastName;
     
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không đúng định dạng")
-    private String email;
     
     private String phone;
     
@@ -37,8 +32,8 @@ public class EmployeeUpdateRequest {
     
     private BigDecimal allowance;
     
-    private LocalDate startDate;
+    //private LocalDate startDate; Thông tin mặc định khi tạo không nên sửa 
     
-    @NotNull(message = "Trạng thái không được để trống")
+    @NotNull(message = "Trạng thái không được để trống") 
     private EmployeeStatus status;
 }

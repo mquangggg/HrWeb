@@ -8,9 +8,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "leave_requests")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = { "employee", "approvedBy" })
 public class LeaveRequest {
 
     @Id

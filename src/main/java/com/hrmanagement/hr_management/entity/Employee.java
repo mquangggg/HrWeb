@@ -12,9 +12,11 @@ import com.hrmanagement.hr_management.enums.Role;
 
 @Entity
 @Table(name = "employees")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"password", "attendances", "leaveRequests", "approvedLeaveRequests", "payrolls", "managedDepartments", "manager", "subordinates" ,"department","position"})
 public class Employee {
 
     @Id
@@ -81,8 +83,8 @@ public class Employee {
     private Set<Payroll> payrolls = new HashSet<>();
 
     // Nhân viên quản lý department
-    @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
-    private Set<Department> managedDepartments = new HashSet<>();
+    @OneToOne(mappedBy = "manager", fetch = FetchType.LAZY)
+    private Department managedDepartment;
 
     // Quản lý trực tiếp (cấp trên)
     @ManyToOne(fetch = FetchType.LAZY)

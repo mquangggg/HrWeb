@@ -8,9 +8,11 @@ import java.time.LocalTime;
 
 @Entity
 @Table(name = "attendances")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = { "employee" })
 public class Attendance {
 
     @Id

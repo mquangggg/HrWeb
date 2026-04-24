@@ -6,9 +6,11 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "payrolls")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = { "employee" })
 public class Payroll {
 
     @Id

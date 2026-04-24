@@ -8,9 +8,11 @@ import java.util.Set;
 
 @Entity
 @Table(name = "positions")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = { "employees" })
 public class Position {
 
     @Id

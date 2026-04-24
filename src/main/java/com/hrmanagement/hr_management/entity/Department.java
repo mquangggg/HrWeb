@@ -7,9 +7,11 @@ import java.util.*;
 
 @Entity
 @Table(name = "departments")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = { "employees", "manager" })
 public class Department {
 
     @Id
@@ -23,7 +25,7 @@ public class Department {
     private String description;
 
     // FK manager_id -> employees(id)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private Employee manager;
 
@@ -35,6 +37,6 @@ public class Department {
         this.createdAt = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
     private Set<Employee> employees = new HashSet<>();
 }

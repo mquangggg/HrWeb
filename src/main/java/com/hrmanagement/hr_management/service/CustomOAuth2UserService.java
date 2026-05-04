@@ -1,19 +1,13 @@
 package com.hrmanagement.hr_management.service;
 
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService; //Lớp này xử lý lấy thông tin người dùng từ Google
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest; //Lớp này chứa thông tin về yêu cầu xác thực OAuth2
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService; // Lớp này xử lý lấy thông tin người dùng từ Google
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest; // Lớp này chứa thông tin về yêu cầu xác thực OAuth2
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.hrmanagement.hr_management.entity.Employee;
 import com.hrmanagement.hr_management.enums.EmployeeStatus;
-import com.hrmanagement.hr_management.enums.Role;
 import com.hrmanagement.hr_management.repository.EmployeeRepository;
 import com.hrmanagement.hr_management.security.CustomOAuth2User;
 
@@ -24,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final EmployeeRepository employeeRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -38,23 +31,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (firstName == null) firstName = name;
         if (lastName == null) lastName = "";
 
-        Optional<Employee> employeeOptional = employeeRepository.findByEmail(email);
-        Employee employee;
-        
-        if (employeeOptional.isPresent()) {
-            employee = employeeOptional.get();
-        } else {
-            // Đăng ký mới nếu chưa có
-            employee = new Employee();
-            employee.setEmail(email);
-            employee.setFirstName(firstName);
-            employee.setLastName(lastName);
-            // Tạo password ngẫu nhiên vì login bằng Google
-            employee.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            employee.setRole(Role.EMPLOYEE);
-            employee.setStatus(EmployeeStatus.active);
-            employee.setStartDate(LocalDate.now());
-            employeeRepository.save(employee);
+        // Chỉ cho phép đăng nhập nếu email đã được ADMIN tạo sẵn trong hệ thống
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new OAuth2AuthenticationException(
+                        "Email " + email + " chưa được đăng ký trong hệ thống. Vui lòng liên hệ Admin."
+                ));
+
+        // Kiểm tra tài khoản có bị vô hiệu hóa không
+        if (employee.getStatus() == EmployeeStatus.inactive) {
+            throw new OAuth2AuthenticationException("Tài khoản của bạn đã bị vô hiệu hóa.");
         }
 
         return new CustomOAuth2User(oAuth2User, email);

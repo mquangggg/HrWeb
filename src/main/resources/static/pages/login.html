@@ -314,9 +314,24 @@
 <script>
     // ===== KHỞI TẠO KHI TẢI TRANG =====
     $(document).ready(function() {
-        // 1. Nếu đã có token thì tự động chuyển sang dashboard
-        if (localStorage.getItem('token')) {
-            window.location.href = '/pages/dashboard.html';
+        // 1. Nếu đã có token thì kiểm tra xem token còn hợp lệ không
+        const existingToken = localStorage.getItem('token');
+        if (existingToken) {
+            // Gọi API để xác minh token, không phải chỉ kiểm tra sự tồn tại
+            $.ajax({
+                url: '/api/v1/auth/me',
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + existingToken },
+                success: function() {
+                    // Token còn hợp lệ → chuyển vào dashboard
+                    window.location.href = '/pages/dashboard.html';
+                },
+                error: function() {
+                    // Token hết hạn hoặc không hợp lệ → xóa đi, ở lại trang login
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                }
+            });
         }
 
         // 2. Điền lại email nếu người dùng đã chọn Ghi nhớ từ lần trước

@@ -1,10 +1,10 @@
 package com.hrmanagement.hr_management.dto.request;
 
 import lombok.Data;
+import java.math.BigDecimal;
 
 @Data
-public class DepartmentRequest {
+public class PositionRequest {
     private String name;
-    private String description;
-    private Long managerId;
+    private BigDecimal baseSalary;
 }

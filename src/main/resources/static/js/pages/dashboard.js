@@ -1,4 +1,4 @@
-﻿// ===================================================
+// ===================================================
 //  DỮ LIỆU MẪU (mock data – sẽ thay bằng API sau)
 // ===================================================
 let employees = [
@@ -10,20 +10,9 @@ let employees = [
     { id:6, name:'Võ Thị Phương',   email:'phuong@company.com', phone:'0906666666', dept:'Marketing',  position:'Designer',     role:'MANAGER',  salary:20000000, status:'active',   color:'#f59e0b' },
 ];
 
-let departments = [
-    { id:1, name:'Kỹ thuật',  manager:'Nguyễn Văn An',  count:45, desc:'Phát triển sản phẩm phần mềm' },
-    { id:2, name:'Nhân sự',   manager:'Trần Thị Bình',  count:12, desc:'Quản lý nhân sự và tuyển dụng' },
-    { id:3, name:'Kế toán',   manager:'Lê Minh Châu',   count:8,  desc:'Kế toán và tài chính' },
-    { id:4, name:'Marketing', manager:'Võ Thị Phương',  count:20, desc:'Truyền thông và marketing' },
-];
+let departments = []; // Dữ liệu thật sẽ được load từ API
 
-let positions = [
-    { id:1, name:'Developer',    dept:'Kỹ thuật',  minSalary:12000000, maxSalary:35000000 },
-    { id:2, name:'Designer',     dept:'Marketing', minSalary:10000000, maxSalary:25000000 },
-    { id:3, name:'HR Specialist',dept:'Nhân sự',   minSalary:10000000, maxSalary:22000000 },
-    { id:4, name:'Accountant',   dept:'Kế toán',   minSalary:10000000, maxSalary:20000000 },
-    { id:5, name:'Manager',      dept:'Tất cả',    minSalary:18000000, maxSalary:40000000 },
-];
+let positions = []; // Dữ liệu thật sẽ được load từ API
 
 let attendances = [
     { emp:'Nguyễn Văn An',  date:'21/04/2026', checkIn:'08:02', checkOut:'17:05', hours:9.05, status:'Đúng giờ' },
@@ -360,15 +349,31 @@ function saveEmployee() {
 // ===================================================
 //  PHÒNG BAN – Render bảng
 // ===================================================
+function fetchDepartments() {
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/departments',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(data) {
+            departments = data;
+            renderDepartments();
+        },
+        error: function(xhr) {
+            console.error('Lỗi lấy danh sách phòng ban:', xhr);
+        }
+    });
+}
+
 function renderDepartments() {
     let html = '';
     departments.forEach(function(dept, i) {
         html += `<tr>
             <td class="ps-3 text-muted">${i + 1}</td>
             <td class="fw-medium">${dept.name}</td>
-            <td style="font-size:13px">${dept.manager}</td>
-            <td><span class="badge bg-light text-dark border">${dept.count} người</span></td>
-            <td class="text-muted" style="font-size:13px">${dept.desc}</td>
+            <td style="font-size:13px">${dept.managerName || 'Chưa có'}</td>
+            <td><span class="badge bg-light text-dark border">${dept.count || 0} người</span></td>
+            <td class="text-muted" style="font-size:13px">${dept.description || ''}</td>
             <td class="text-center">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openDeptModal(${dept.id})">
                     <i class="fas fa-pen"></i>
@@ -382,10 +387,10 @@ function renderDepartments() {
     $('#department-tbody').html(html || '<tr><td colspan="6" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
 
     // Cập nhật dropdown chọn phòng ban trong các modal khác
-    const options = departments.map(d => `<option>${d.name}</option>`).join('');
+    const options = departments.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
     $('#emp-dept, #pos-dept').html('<option value="">-- Chọn phòng ban --</option>' + options);
 }
-renderDepartments();
+fetchDepartments();
 
 // Mở modal phòng ban
 function openDeptModal(id) {
@@ -399,8 +404,8 @@ function openDeptModal(id) {
         $('#dept-modal-title').text('Chỉnh sửa phòng ban');
         $('#dept-id').val(dept.id);
         $('#dept-name').val(dept.name);
-        $('#dept-manager').val(dept.manager);
-        $('#dept-desc').val(dept.desc);
+        $('#dept-manager').val(dept.managerName || ''); 
+        $('#dept-desc').val(dept.description || '');
     }
     new bootstrap.Modal($('#department-modal')[0]).show();
 }
@@ -412,34 +417,57 @@ function saveDept() {
     if (!name) { alert('Vui lòng nhập tên phòng ban!'); return; }
 
     const data = {
-        name:    name,
-        manager: $('#dept-manager').val().trim(),
-        desc:    $('#dept-desc').val().trim(),
-        count:   0,
+        name: name,
+        description: $('#dept-desc').val().trim(),
+        // managerId: null -> Tạm thời chưa gán quản lý vì chưa có API nhân viên
     };
-    if (id) {
-        const idx = departments.findIndex(d => d.id === id);
-        departments[idx] = { ...departments[idx], ...data };
-    } else {
-        data.id = Date.now();
-        departments.push(data);
-    }
-    renderDepartments();
-    bootstrap.Modal.getInstance($('#department-modal')[0]).hide();
+
+    const token = localStorage.getItem('token');
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? '/api/v1/departments/' + id : '/api/v1/departments';
+
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function() {
+            fetchDepartments(); // Gọi lại API để load danh sách mới
+            bootstrap.Modal.getInstance($('#department-modal')[0]).hide();
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Có lỗi xảy ra');
+        }
+    });
 }
 
 // ===================================================
 //  CHỨC VỤ – Render bảng
 // ===================================================
+function fetchPositions() {
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/positions',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(data) {
+            positions = data;
+            renderPositions();
+        },
+        error: function(xhr) {
+            console.error('Lỗi lấy danh sách chức vụ:', xhr);
+        }
+    });
+}
+
 function renderPositions() {
     let html = '';
     positions.forEach(function(pos, i) {
         html += `<tr>
             <td class="ps-3 text-muted">${i + 1}</td>
             <td class="fw-medium">${pos.name}</td>
-            <td style="font-size:13px">${pos.dept}</td>
-            <td style="font-size:13px">${formatVND(pos.minSalary)}</td>
-            <td style="font-size:13px">${formatVND(pos.maxSalary)}</td>
+            <td style="font-size:13px">${formatVND(pos.baseSalary || 0)}</td>
             <td class="text-center">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openPosModal(${pos.id})">
                     <i class="fas fa-pen"></i>
@@ -450,12 +478,17 @@ function renderPositions() {
             </td>
         </tr>`;
     });
-    $('#position-tbody').html(html || '<tr><td colspan="6" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
+    $('#position-tbody').html(html || '<tr><td colspan="4" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
+
+    // Cập nhật dropdown chức vụ trong modal thêm nhân viên
+    const options = positions.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    $('#emp-position').html('<option value="">-- Chọn chức vụ --</option>' + options);
 }
-renderPositions();
+fetchPositions();
 
 function openPosModal(id) {
-    $('#pos-id').val(''); $('#pos-name, #pos-min, #pos-max').val(''); $('#pos-dept').val('');
+    $('#pos-id').val(''); 
+    $('#pos-name, #pos-salary').val('');
     $('#pos-modal-title').text('Thêm chức vụ mới');
     if (id) {
         const pos = positions.find(p => p.id === id);
@@ -463,8 +496,7 @@ function openPosModal(id) {
         $('#pos-modal-title').text('Chỉnh sửa chức vụ');
         $('#pos-id').val(pos.id);
         $('#pos-name').val(pos.name);
-        $('#pos-min').val(pos.minSalary);
-        $('#pos-max').val(pos.maxSalary);
+        $('#pos-salary').val(pos.baseSalary);
     }
     new bootstrap.Modal($('#position-modal')[0]).show();
 }
@@ -473,11 +505,30 @@ function savePosition() {
     const id   = parseInt($('#pos-id').val()) || null;
     const name = $('#pos-name').val().trim();
     if (!name) { alert('Vui lòng nhập tên chức vụ!'); return; }
-    const data = { name, dept: $('#pos-dept').val(), minSalary: parseInt($('#pos-min').val())||0, maxSalary: parseInt($('#pos-max').val())||0 };
-    if (id) { const i = positions.findIndex(p => p.id === id); positions[i] = {...positions[i], ...data}; }
-    else    { data.id = Date.now(); positions.push(data); }
-    renderPositions();
-    bootstrap.Modal.getInstance($('#position-modal')[0]).hide();
+    
+    const data = { 
+        name: name, 
+        baseSalary: parseInt($('#pos-salary').val()) || 0 
+    };
+
+    const token = localStorage.getItem('token');
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? '/api/v1/positions/' + id : '/api/v1/positions';
+
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function() {
+            fetchPositions(); // Gọi lại API để load danh sách mới
+            bootstrap.Modal.getInstance($('#position-modal')[0]).hide();
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Có lỗi xảy ra');
+        }
+    });
 }
 
 // ===================================================
@@ -645,16 +696,42 @@ function deleteRow(type, id) {
             employees   = employees.filter(e => e.id !== id);
             renderEmployees();
             renderDashboardEmployees();
+            bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
         }
         if (type === 'department') {
-            departments = departments.filter(d => d.id !== id);
-            renderDepartments();
+            const token = localStorage.getItem('token');
+            $.ajax({
+                url: '/api/v1/departments/' + id,
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function() {
+                    fetchDepartments();
+                    bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || 'Không thể xóa phòng ban');
+                    bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
+                }
+            });
+            return; // Dừng lại ở đây vì request bất đồng bộ
         }
         if (type === 'position') {
-            positions   = positions.filter(p => p.id !== id);
-            renderPositions();
+            const token = localStorage.getItem('token');
+            $.ajax({
+                url: '/api/v1/positions/' + id,
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function() {
+                    fetchPositions();
+                    bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || 'Không thể xóa chức vụ');
+                    bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
+                }
+            });
+            return;
         }
-        bootstrap.Modal.getInstance($('#confirm-modal')[0]).hide();
     });
 
     new bootstrap.Modal($('#confirm-modal')[0]).show();

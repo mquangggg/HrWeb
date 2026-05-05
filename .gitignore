@@ -37,3 +37,6 @@ src/main/resources/application.properties
 
 # Ẩn thư mục .agents (bao gồm tất cả file bên trong)
 .agents/
+
+# Ẩn file ghi chú công việc
+TODO.md

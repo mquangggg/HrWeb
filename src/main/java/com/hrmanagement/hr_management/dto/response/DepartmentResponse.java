@@ -13,5 +13,6 @@ public class DepartmentResponse {
     private String description;
     private Long managerId;
     private String managerName;
+    private Integer employeeCount;
     private LocalDateTime createdAt;
 }

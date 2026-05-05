@@ -19,7 +19,7 @@ import com.hrmanagement.hr_management.service.PositionService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/v1/positions")
+@RequestMapping("/api/v1/positions")
 @RequiredArgsConstructor
 public class PositionController {
     private final PositionService positionService;
@@ -45,7 +45,7 @@ public class PositionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<PositionResponse> deletePosition(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);
         return ResponseEntity.noContent().build();
     }

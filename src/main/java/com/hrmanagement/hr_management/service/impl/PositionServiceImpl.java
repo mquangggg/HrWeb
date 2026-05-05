@@ -14,8 +14,11 @@ import com.hrmanagement.hr_management.service.PositionService;
 import lombok.RequiredArgsConstructor;
 
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PositionServiceImpl implements PositionService {
     
     private final PositionRepository positionRepository;
@@ -47,7 +50,7 @@ public class PositionServiceImpl implements PositionService {
     public PositionResponse updatePosition(Long id, PositionRequest request) {
        Position position = positionRepository.findById(id)
                .orElseThrow(() -> new RuntimeException("Không tìm thấy chức vụ với id: " + id));
-        if(!position.getName().toLowerCase().equalsIgnoreCase(request.getName().toLowerCase()) 
+        if(!position.getName().equalsIgnoreCase(request.getName()) 
             && positionRepository.existsByName(request.getName())) {
             throw new RuntimeException("Chức vụ đã tồn tại");
         }
@@ -60,6 +63,9 @@ public class PositionServiceImpl implements PositionService {
     public void deletePosition(Long id) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy chức vụ với id: " + id));
+        if (!position.getEmployees().isEmpty()) {
+            throw new RuntimeException("Không thể xóa chức vụ này vì đang có nhân viên giữ chức vụ này!");
+        }
         positionRepository.delete(position);
     }
 

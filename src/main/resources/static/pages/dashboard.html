@@ -234,11 +234,18 @@
             <!-- ============== SECTION: NHÂN VIÊN ============== -->
             <div class="section" id="section-employee">
                 <div class="table-card">
-                    <div class="table-card-header">
+                    <div class="table-card-header flex-wrap">
                         <div class="table-card-title">
                             <i class="fas fa-users text-primary me-2"></i>Quản lý nhân viên
                         </div>
-                        <div class="d-flex gap-2">
+                        
+                        <div class="d-flex gap-2 align-items-center">
+                            <!-- Hiển thị tag đang lọc (ẩn mặc định) -->
+                            <div id="emp-filter-info" class="badge bg-soft-primary text-primary border me-2" style="display:none; font-weight: 500; padding: 8px 12px;">
+                                <i class="fas fa-filter me-1"></i> <span id="emp-filter-name">...</span>
+                                <i class="fas fa-times ms-2 cursor-pointer" onclick="clearEmpFilter()" title="Xóa lọc"></i>
+                            </div>
+
                             <!-- Ô tìm kiếm -->
                             <input type="text" class="form-control form-control-sm" id="emp-search"
                                 placeholder="Tìm theo tên, email..." style="width:220px" oninput="filterEmployees()">
@@ -266,8 +273,11 @@
                             <tbody id="employee-tbody"></tbody>
                         </table>
                     </div>
+                    <!-- Phân trang -->
+                    <div class="d-flex justify-content-center py-2" id="emp-pagination"></div>
                 </div>
             </div><!-- /section-employee -->
+
 
             <!-- ============== SECTION: PHÒNG BAN ============== -->
             <div class="section" id="section-department">
@@ -505,35 +515,46 @@
                 <div class="modal-body">
                     <input type="hidden" id="emp-id">
                     <div class="row g-3">
+                        <!-- Họ -->
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Họ và tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="emp-name" placeholder="Nguyễn Văn A">
+                            <label class="form-label fw-medium">Họ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="emp-firstname" placeholder="Nguyễn">
                         </div>
+                        <!-- Tên -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="emp-lastname" placeholder="Văn A">
+                        </div>
+                        <!-- Email -->
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="emp-email" placeholder="nv@company.com">
                         </div>
+                        <!-- Mật khẩu (chỉ hiện khi thêm mới) -->
+                        <div class="col-md-6" id="emp-password-group">
+                            <label class="form-label fw-medium">Mật khẩu <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="emp-password" placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                        <!-- Số điện thoại -->
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Số điện thoại</label>
                             <input type="tel" class="form-control" id="emp-phone" placeholder="0901 234 567">
                         </div>
+                        <!-- Phòng ban (load từ API) -->
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Phòng ban <span class="text-danger">*</span></label>
+                            <label class="form-label fw-medium">Phòng ban</label>
                             <select class="form-select" id="emp-dept">
                                 <option value="">-- Chọn phòng ban --</option>
                             </select>
                         </div>
+                        <!-- Chức vụ (load từ API) -->
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Chức vụ <span class="text-danger">*</span></label>
+                            <label class="form-label fw-medium">Chức vụ</label>
                             <select class="form-select" id="emp-position">
                                 <option value="">-- Chọn chức vụ --</option>
-                                <option>Developer</option>
-                                <option>Designer</option>
-                                <option>Manager</option>
-                                <option>HR Specialist</option>
-                                <option>Accountant</option>
                             </select>
                         </div>
+                        <!-- Vai trò -->
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Vai trò <span class="text-danger">*</span></label>
                             <select class="form-select" id="emp-role">
@@ -542,10 +563,17 @@
                                 <option value="ADMIN">ADMIN</option>
                             </select>
                         </div>
+                        <!-- Lương cơ bản -->
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Lương cơ bản (VNĐ)</label>
-                            <input type="number" class="form-control" id="emp-salary" placeholder="15000000">
+                            <input type="number" class="form-control" id="emp-salary" placeholder="15000000" min="0">
                         </div>
+                        <!-- Phụ cấp -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Phụ cấp (VNĐ)</label>
+                            <input type="number" class="form-control" id="emp-allowance" placeholder="0" min="0">
+                        </div>
+                        <!-- Trạng thái -->
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Trạng thái</label>
                             <select class="form-select" id="emp-status">
@@ -564,6 +592,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Modal: Thêm / Sửa Phòng ban -->
     <div class="modal fade" id="department-modal" tabindex="-1">

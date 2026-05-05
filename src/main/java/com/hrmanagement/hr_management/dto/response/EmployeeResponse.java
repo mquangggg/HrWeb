@@ -30,7 +30,9 @@ public class EmployeeResponse {
     private EmployeeStatus status;
     
     // Thay vì trả về nguyên cả Object Department/Position (dễ bị đệ quy vòng lặp),
-    // Ta chỉ trả về tên hoặc ID của chúng
+    // Ta trả về cả tên lẫn ID để frontend dùng
+    private Long departmentId;
     private String departmentName;
+    private Long positionId;
     private String positionName;
 }

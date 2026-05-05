@@ -58,7 +58,9 @@ public class AuthServiceImpl implements AuthService {
                 .allowance(employee.getAllowance())
                 .startDate(employee.getStartDate())
                 .status(employee.getStatus())
+                .departmentId(employee.getDepartment() != null ? employee.getDepartment().getId() : null)
                 .departmentName(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
+                .positionId(employee.getPosition() != null ? employee.getPosition().getId() : null)
                 .positionName(employee.getPosition() != null ? employee.getPosition().getName() : null)
                 .build();
 
@@ -115,7 +117,9 @@ public class AuthServiceImpl implements AuthService {
                 .allowance(employee.getAllowance())
                 .startDate(employee.getStartDate())
                 .status(employee.getStatus())
+                .departmentId(employee.getDepartment() != null ? employee.getDepartment().getId() : null)
                 .departmentName(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
+                .positionId(employee.getPosition() != null ? employee.getPosition().getId() : null)
                 .positionName(employee.getPosition() != null ? employee.getPosition().getName() : null)
                 .build();
     }

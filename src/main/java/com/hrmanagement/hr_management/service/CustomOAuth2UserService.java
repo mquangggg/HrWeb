@@ -31,11 +31,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (firstName == null) firstName = name;
         if (lastName == null) lastName = "";
 
-        // Chỉ cho phép đăng nhập nếu email đã được ADMIN tạo sẵn trong hệ thống
-        Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new OAuth2AuthenticationException(
-                        "Email " + email + " chưa được đăng ký trong hệ thống. Vui lòng liên hệ Admin."
-                ));
+        // Tìm nhân viên theo email
+        Employee employee = employeeRepository.findByEmail(email).orElse(null);
+
+        if (employee == null) {
+            // Tự động tạo tài khoản nếu đăng nhập lần đầu bằng Google
+            employee = new Employee();
+            employee.setEmail(email);
+            employee.setFirstName(firstName);
+            employee.setLastName(lastName);
+            employee.setRole(com.hrmanagement.hr_management.enums.Role.EMPLOYEE); // ← Mặc định là EMPLOYEE, Admin vào tự đổi
+            employee.setStatus(EmployeeStatus.active);
+            employee.setPassword("OAuth2_User"); // Password giả cho OAuth2 (không dùng để login thường)
+            employee.setStartDate(java.time.LocalDate.now());
+            employee = employeeRepository.save(employee);
+        }
 
         // Kiểm tra tài khoản có bị vô hiệu hóa không
         if (employee.getStatus() == EmployeeStatus.inactive) {

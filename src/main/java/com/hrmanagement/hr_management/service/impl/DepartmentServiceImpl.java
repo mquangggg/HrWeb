@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.hrmanagement.hr_management.dto.request.DepartmentRequest;
 import com.hrmanagement.hr_management.dto.response.DepartmentResponse;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
@@ -88,8 +90,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban với ID: " + id));
         
-        // Cần lưu ý nếu phòng ban đang có nhân viên thì DB sẽ văng lỗi ConstraintViolationException.
-        // Tạm thời mình cứ xóa thẳng, GlobalExceptionHandler sẽ bắt nếu có lỗi.
+        if (!department.getEmployees().isEmpty()) {
+            throw new RuntimeException("Không thể xóa phòng ban này vì đang có nhân viên thuộc phòng ban!");
+        }
+        
         departmentRepository.delete(department);
     }
 
@@ -102,6 +106,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .managerId(department.getManager() != null ? department.getManager().getId() : null)
                 .managerName(department.getManager() != null ? 
                         department.getManager().getFirstName() + " " + department.getManager().getLastName() : null)
+                .employeeCount(department.getEmployees() != null ? department.getEmployees().size() : 0)
                 .createdAt(department.getCreatedAt())
                 .build();
     }

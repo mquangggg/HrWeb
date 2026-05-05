@@ -19,8 +19,11 @@ import com.hrmanagement.hr_management.service.CustomOAuth2UserService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity   // ← Bật để @PreAuthorize có hiệu lực
 @RequiredArgsConstructor
 public class SecurityConfig {
     // Class này chứa cấu hình bảo mật ứng dụng Spring Boot

@@ -74,41 +74,41 @@
 ## ⏰ Giai đoạn 3 – Chấm công (Attendance)
 
 ### 3.1 Backend
-- [ ] Tạo `AttendanceService` + `AttendanceServiceImpl`
-- [ ] Viết API:
+- [x] Tạo `AttendanceService` + `AttendanceServiceImpl`
+- [x] Viết API:
   - `POST /api/v1/attendances/check-in` – Chấm công vào
   - `POST /api/v1/attendances/check-out` – Chấm công ra
   - `GET /api/v1/attendances/me` – Lịch sử của tôi
   - `GET /api/v1/attendances` – Tất cả (ADMIN/MANAGER)
-- [ ] Kiểm tra không cho check-in 2 lần/ngày
-- [ ] Tự động đánh dấu "Đi muộn" nếu check-in sau 8:30
+- [x] Kiểm tra không cho check-in 2 lần/ngày
+- [x] Tự động đánh dấu "Đi muộn" nếu check-in sau 8:30
 
 ### 3.2 Frontend
-- [ ] Nút Check-in gọi `POST /api/v1/attendances/check-in` thật
-- [ ] Nút Check-out gọi `POST /api/v1/attendances/check-out` thật
-- [ ] Bảng lịch sử chấm công lấy từ `GET /api/v1/attendances/me`
-- [ ] Thay số liệu thống kê (96 đúng giờ, 32 đi muộn...) bằng dữ liệu thật
+- [x] Nút Check-in gọi `POST /api/v1/attendances/check-in` thật
+- [x] Nút Check-out gọi `POST /api/v1/attendances/check-out` thật
+- [x] Bảng lịch sử chấm công lấy từ `GET /api/v1/attendances/me`
+- [x] Thay số liệu thống kê (96 đúng giờ, 32 đi muộn...) bằng dữ liệu thật
 
 ---
 
 ## 🌴 Giai đoạn 4 – Nghỉ phép (Leave Request)
 
 ### 4.1 Backend
-- [ ] Tạo `LeaveRequestService` + `LeaveRequestServiceImpl`
-- [ ] Viết API:
+- [x] Tạo `LeaveRequestService` + `LeaveRequestServiceImpl`
+- [x] Viết API:
   - `POST /api/v1/leave-requests` – Tạo đơn nghỉ
   - `GET /api/v1/leave-requests/me` – Đơn của tôi
   - `GET /api/v1/leave-requests` – Tất cả đơn (ADMIN/MANAGER)
   - `PATCH /api/v1/leave-requests/{id}/approve` – Duyệt
   - `PATCH /api/v1/leave-requests/{id}/reject` – Từ chối
-- [ ] Kiểm tra không gửi đơn cho ngày đã qua
-- [ ] Kiểm tra chỉ hủy được đơn PENDING
+- [x] Kiểm tra không gửi đơn cho ngày đã qua
+- [x] Kiểm tra chỉ hủy được đơn PENDING
 
 ### 4.2 Frontend
-- [ ] Form tạo đơn: Gọi `POST /api/v1/leave-requests` thật
-- [ ] Bảng nghỉ phép: Lấy từ API thật
-- [ ] Nút Duyệt/Từ chối: Gọi API thật
-- [ ] Cập nhật badge số đơn chờ duyệt từ API
+- [x] Form tạo đơn: Gọi `POST /api/v1/leave-requests` thật
+- [x] Bảng nghỉ phép: Lấy từ API thật
+- [x] Nút Duyệt/Từ chối: Gọi API thật
+- [x] Cập nhật badge số đơn chờ duyệt từ API
 
 ---
 

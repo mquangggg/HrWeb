@@ -25,6 +25,6 @@ public class Position {
     @Column(name = "base_salary", precision = 15, scale = 2)
     private BigDecimal baseSalary;
 
-    @OneToMany(mappedBy = "position", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "position", fetch = FetchType.LAZY)
     private Set<Employee> employees = new HashSet<>();
 }

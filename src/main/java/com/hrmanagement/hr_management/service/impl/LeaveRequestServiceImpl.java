@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.hrmanagement.hr_management.dto.request.LeaveRequest;
 import com.hrmanagement.hr_management.dto.response.LeaveResponse;
 import com.hrmanagement.hr_management.dto.response.PageResponse;
 import com.hrmanagement.hr_management.entity.Employee;
@@ -18,6 +19,9 @@ import com.hrmanagement.hr_management.enums.LeaveStatus;
 import com.hrmanagement.hr_management.repository.EmployeeRepository;
 import com.hrmanagement.hr_management.repository.LeaveRequestRepository;
 import com.hrmanagement.hr_management.service.LeaveRequestService;
+
+import java.time.LocalDate;
+import java.util.Arrays;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,16 +34,29 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
     private final EmployeeRepository employeeRepository;
 
     @Override
-    public LeaveResponse createLeaveRequest(String email, com.hrmanagement.hr_management.dto.request.LeaveRequest request) {
+    public LeaveResponse createLeaveRequest(String email, LeaveRequest request) {
         Employee employee = employeeRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
-        if (request.getStartDate().isBefore(java.time.LocalDate.now())) {
-            throw new RuntimeException("Không thể xin nghỉ phép cho những ngày trong quá khứ!");
+        // Phải xin nghỉ trước ít nhất 1 ngày
+        if (!request.getStartDate().isAfter(LocalDate.now())) {
+            throw new RuntimeException("Phải xin nghỉ phép trước ít nhất 1 ngày làm việc!");
         }
 
         if (request.getStartDate().isAfter(request.getEndDate())) {
             throw new RuntimeException("Ngày kết thúc phải sau ngày bắt đầu!");
+        }
+
+        // Kiểm tra overlap đơn nghỉ phép
+        boolean isOverlapping = leaveRequestRepository.existsByEmployeeIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                employee.getId(),
+                Arrays.asList(LeaveStatus.pending, LeaveStatus.approved),
+                request.getEndDate(),
+                request.getStartDate()
+        );
+
+        if (isOverlapping) {
+            throw new RuntimeException("Bạn đã có đơn xin nghỉ phép (đang chờ hoặc đã duyệt) trùng với thời gian này!");
         }
 
         com.hrmanagement.hr_management.entity.LeaveRequest leaveRequest = new com.hrmanagement.hr_management.entity.LeaveRequest();
@@ -84,6 +101,22 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
             throw new RuntimeException("Đơn này đã được xử lý (không còn ở trạng thái pending)!");
         }
 
+        // --- Kiểm tra quyền duyệt ---
+        String role = approver.getRole().name();
+        if (role.equals("ADMIN")) {
+            // ADMIN có toàn quyền
+        } else if (role.equals("MANAGER")) {
+            // MANAGER chỉ được duyệt nhân viên trong cùng phòng ban
+            Long empDeptId = (leaveRequest.getEmployee().getDepartment() != null) ? leaveRequest.getEmployee().getDepartment().getId() : null;
+            Long mgrDeptId = (approver.getDepartment() != null) ? approver.getDepartment().getId() : null;
+
+            if (empDeptId == null || !empDeptId.equals(mgrDeptId)) {
+                throw new RuntimeException("Bạn chỉ có quyền duyệt đơn của nhân viên thuộc cùng phòng ban của mình!");
+            }
+        } else {
+            throw new RuntimeException("Bạn không có quyền duyệt đơn xin nghỉ phép!");
+        }
+
         leaveRequest.setStatus(newStatus);
         leaveRequest.setApprovedBy(approver);
 
@@ -104,6 +137,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
                 .days((int) daysBetween)
                 .approverByName(entity.getApprovedBy() != null ? 
                         entity.getApprovedBy().getFirstName() + " " + entity.getApprovedBy().getLastName() : null)
+                .departmentId(entity.getEmployee().getDepartment() != null ? entity.getEmployee().getDepartment().getId() : null)
                 .note("") // Có thể thêm logic lưu note khi từ chối nếu có
                 .build();
     }

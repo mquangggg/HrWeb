@@ -1,5 +1,6 @@
 package com.hrmanagement.hr_management.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                                    Pageable pageable);
 
     // Get all employees by status
-    Set<Employee> findByStatus(EmployeeStatus status);
+    List<Employee> findByStatus(EmployeeStatus status);
 
     // Get all employees with a specific role
     Set<Employee> findByRole(Role role);

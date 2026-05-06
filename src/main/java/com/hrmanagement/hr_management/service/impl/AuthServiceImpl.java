@@ -90,14 +90,25 @@ public class AuthServiceImpl implements AuthService {
         employee.setStatus(EmployeeStatus.active);
         employee.setStartDate(LocalDate.now());
 
-        employeeRepository.save(employee);
+        Employee savedEmployee = employeeRepository.save(employee);
 
-        // Đăng nhập tự động sau khi đăng ký
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail(request.getEmail());
-        loginRequest.setPassword(request.getPassword());
+        // Đăng nhập tự động sau khi đăng ký (Tạo JWT trực tiếp, không lộ password trong memory)
+        String jwt = jwtTokenProvide.generateToken(savedEmployee.getEmail());
 
-        return login(loginRequest);
+        EmployeeResponse employeeResponse = EmployeeResponse.builder()
+                .id(savedEmployee.getId())
+                .firstName(savedEmployee.getFirstName())
+                .lastName(savedEmployee.getLastName())
+                .email(savedEmployee.getEmail())
+                .role(savedEmployee.getRole())
+                .status(savedEmployee.getStatus())
+                .startDate(savedEmployee.getStartDate())
+                .build();
+
+        return AuthResponse.builder()
+                .token(jwt)
+                .user(employeeResponse)
+                .build();
     }
 
     @Override

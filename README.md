@@ -44,8 +44,7 @@ src/main/
 ```properties
 # application.properties
 spring.datasource.url=jdbc:mysql://localhost:3306/db_hr_management
-spring.datasource.username=root
-spring.datasource.password=123456
+
 server.port=8082
 ```
 

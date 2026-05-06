@@ -21,4 +21,5 @@ public class LeaveResponse {
     private Integer days;
     private String note;
     private String approverByName;
+    private Long departmentId;
 }

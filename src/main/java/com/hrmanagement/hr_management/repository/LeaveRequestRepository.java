@@ -22,4 +22,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
 
     // Tìm đơn xin nghỉ phép của 1 nhân viên (có phân trang)
     Page<LeaveRequest> findByEmployeeId(Long employeeId, Pageable pageable);
+
+    // Kiểm tra overlap đơn nghỉ phép
+    boolean existsByEmployeeIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            Long employeeId, java.util.Collection<LeaveStatus> statuses, java.time.LocalDate endDate, java.time.LocalDate startDate);
 }

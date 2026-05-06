@@ -55,6 +55,9 @@ function showSection(name) {
 
     // Cập nhật tiêu đề header
     $('#header-title').text(sectionTitles[name] || name);
+
+    // Tự động load dữ liệu khi vào section tương ứng
+    if (name === 'payroll') fetchPayrolls();
 }
 
 // ===================================================
@@ -799,10 +802,8 @@ let leavePagination = { page: 0, size: 10, totalPages: 0 };
 
 function fetchLeaveRequests(page = 0) {
     const token = localStorage.getItem('token');
-    const role = JSON.parse(localStorage.getItem('user'))?.role || 'EMPLOYEE';
-    const url = (role === 'MANAGER' || role === 'ADMIN') 
-              ? `/api/v1/leave-requests?page=${page}&size=${leavePagination.size}`
-              : `/api/v1/leave-requests/me?page=${page}&size=${leavePagination.size}`;
+    // Luôn gọi API lấy toàn bộ đơn nghỉ phép cho tất cả mọi người
+    const url = `/api/v1/leave-requests?page=${page}&size=${leavePagination.size}`;
 
     $.ajax({
         url: url,
@@ -811,7 +812,8 @@ function fetchLeaveRequests(page = 0) {
         success: function(res) {
             leavePagination.page = res.currentPage;
             leavePagination.totalPages = res.totalPages;
-            renderLeaveRequests(res.data, role);
+            const user = JSON.parse(localStorage.getItem('user'));
+            renderLeaveRequests(res.data, user);
         },
         error: function(xhr) {
             console.error('Lỗi khi tải lịch sử nghỉ phép:', xhr);
@@ -819,12 +821,25 @@ function fetchLeaveRequests(page = 0) {
     });
 }
 
-function renderLeaveRequests(list, role) {
+function renderLeaveRequests(list, user) {
+    const role = user?.role || 'EMPLOYEE';
+    const myDeptId = user?.departmentId || null;
+    
     let pending = 0;
     let html    = '';
     list.forEach(function(leave, i) {
         if (leave.status === 'pending') pending++;
-        const canApprove = (leave.status === 'pending') && (role === 'MANAGER' || role === 'ADMIN');
+        
+        // Logic hiển thị nút duyệt: ADMIN thấy hết, MANAGER thấy đơn cùng phòng ban
+        let canApprove = false;
+        if (leave.status === 'pending') {
+            if (role === 'ADMIN') {
+                canApprove = true;
+            } else if (role === 'MANAGER' && leave.departmentId === myDeptId) {
+                canApprove = true;
+            }
+        }
+
         html += `<tr>
             <td class="ps-3 text-muted">${i + 1 + (leavePagination.page * leavePagination.size)}</td>
             <td class="fw-medium">${leave.fullName || '—'}</td>
@@ -845,7 +860,8 @@ function renderLeaveRequests(list, role) {
         </tr>`;
     });
     $('#leave-tbody').html(html || '<tr><td colspan="8" class="text-center text-muted py-3">Không có đơn nghỉ phép nào</td></tr>');
-    // Cập nhật số badge (chỉ có ý nghĩa khi là admin/manager)
+    
+    // Badge số đơn chờ duyệt chỉ hiện cho ADMIN/MANAGER
     if (role === 'MANAGER' || role === 'ADMIN') {
         $('#leave-badge').text(pending).toggle(pending > 0);
     }
@@ -912,42 +928,91 @@ function updateLeaveStatus(id, status) {
 // ===================================================
 //  BẢNG LƯƠNG – Render
 // ===================================================
-function renderPayroll() {
+function fetchPayrolls() {
+    const monthVal = $('#payroll-month').val(); // "YYYY-MM"
+    if (!monthVal) return;
+
+    const [year, month] = monthVal.split('-');
+    const token = localStorage.getItem('token');
+
+    $.ajax({
+        url: `/api/v1/payrolls?month=${parseInt(month)}&year=${year}`,
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(res) {
+            renderPayroll(res.data);
+            updatePayrollStats(res.data);
+        },
+        error: function(xhr) {
+            console.error('Lỗi khi tải bảng lương:', xhr);
+        }
+    });
+}
+
+function renderPayroll(list) {
     let html = '';
-    employees.forEach(function(emp) {
-        const bonus   = Math.round(emp.salary * 0.1);          // Phụ cấp 10%
-        const deduct  = emp.status === 'inactive' ? emp.salary : 0; // Trừ nếu inactive
-        const total   = emp.salary + bonus - deduct;
-        const isPaid  = emp.status === 'active';
+    list.forEach(function(p) {
         html += `<tr>
             <td class="ps-3">
                 <div class="d-flex align-items-center">
-                    ${empAvatar(emp)}
+                    ${empAvatarFromApi({ id: p.employeeId, firstName: p.employeeName.split(' ')[0], lastName: p.employeeName.split(' ').pop() })}
                     <div>
-                        <div class="fw-medium" style="font-size:13px">${emp.name}</div>
-                        <div class="text-muted" style="font-size:11px">${emp.email}</div>
+                        <div class="fw-medium" style="font-size:13px">${p.employeeName}</div>
+                        <div class="text-muted" style="font-size:11px">${p.email}</div>
                     </div>
                 </div>
             </td>
-            <td style="font-size:13px">${emp.dept}</td>
-            <td style="font-size:13px">${formatVND(emp.salary)}</td>
-            <td style="font-size:13px" class="text-success">+${formatVND(bonus)}</td>
-            <td style="font-size:13px" class="text-danger">-${formatVND(deduct)}</td>
-            <td class="fw-bold">${formatVND(total)}</td>
-            <td>${isPaid
-                ? '<span class="badge bg-warning text-dark">Chưa trả</span>'
-                : '<span class="badge bg-danger">Đã khấu trừ</span>'}</td>
+            <td style="font-size:13px">${p.departmentName}</td>
+            <td style="font-size:13px">${formatVND(p.baseSalary)}</td>
+            <td style="font-size:13px" class="fw-medium text-primary">${p.workingDays}</td>
+            <td style="font-size:13px" class="text-success">+${formatVND(p.allowance)}</td>
+            <td style="font-size:13px" class="text-danger">-${formatVND(p.deduction)}</td>
+            <td class="fw-bold">${formatVND(p.netSalary)}</td>
+            <td><span class="badge bg-success">Đã tính</span></td>
         </tr>`;
     });
-    $('#payroll-tbody').html(html);
+    $('#payroll-tbody').html(html || '<tr><td colspan="8" class="text-center text-muted py-3">Chưa có dữ liệu lương tháng này. Nhấn "Tính lương" để bắt đầu.</td></tr>');
 }
-renderPayroll();
 
-// Tính lương (giả lập – sẽ gọi API /api/v1/payrolls/calculate sau)
-function calculatePayroll() {
-    const month = $('#payroll-month').val();
-    alert(`Đang tính lương cho tháng ${month}...\n(Backend chưa sẵn sàng)`);
+function updatePayrollStats(list) {
+    let total = 0;
+    list.forEach(p => total += p.netSalary);
+    
+    $('#total-salary').text(formatVND(total));
+    $('#total-employees').text(list.length);
+    
+    const avg = list.length > 0 ? Math.round(total / list.length) : 0;
+    $('#avg-salary').text(formatVND(avg));
 }
+
+// Tính lương
+function calculatePayroll() {
+    const monthVal = $('#payroll-month').val();
+    if (!monthVal) return;
+
+    const [year, month] = monthVal.split('-');
+    const token = localStorage.getItem('token');
+
+    if (!confirm(`Bạn có chắc muốn tính lại lương cho tháng ${month}/${year}?`)) return;
+
+    $.ajax({
+        url: `/api/v1/payrolls/calculate?month=${parseInt(month)}&year=${year}`,
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(res) {
+            alert(res.message);
+            fetchPayrolls(); // Reload lại bảng
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Có lỗi xảy ra khi tính lương');
+        }
+    });
+}
+
+// Lắng nghe sự kiện đổi tháng
+$('#payroll-month').on('change', function() {
+    fetchPayrolls();
+});
 
 // ===================================================
 //  XÓA DÒNG (dùng chung cho employee, department, position)

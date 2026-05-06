@@ -27,8 +27,8 @@ public class Payroll {
     @Column(nullable = false)
     private Integer year;
 
-    @Column(name = "working_days")
-    private Integer workingDays;
+    @Column(name = "working_days", precision = 10, scale = 2)
+    private BigDecimal workingDays;
 
     @Column(name = "absent_days")
     private Integer absentDays = 0;

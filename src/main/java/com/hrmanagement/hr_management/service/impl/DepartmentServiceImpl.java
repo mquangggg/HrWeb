@@ -65,7 +65,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban với ID: " + id));
 
         // Kiểm tra tên trùng lặp (nếu đổi tên mới)
-        if (!department.getName().toLowerCase().equals(request.getName().toLowerCase()) && departmentRepository.existsByName(request.getName())) {
+        if (!department.getName().equalsIgnoreCase(request.getName()) && departmentRepository.existsByName(request.getName())) {
             throw new RuntimeException("Tên phòng ban đã tồn tại!");
         }
 

@@ -5,7 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.hrmanagement.hr_management.entity.Attendance;
 
+import com.hrmanagement.hr_management.enums.AttendanceStatus;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
@@ -16,4 +18,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     // Lấy lịch sử chấm công của 1 nhân viên (có phân trang)
     Page<Attendance> findByEmployeeId(Long employeeId, Pageable pageable);
 
+    // Đếm số ngày chấm công hợp lệ trong khoảng thời gian
+    // Lấy danh sách chấm công trong khoảng thời gian
+    java.util.List<Attendance> findByEmployeeIdAndDateBetween(Long employeeId, LocalDate start, LocalDate end);
 }

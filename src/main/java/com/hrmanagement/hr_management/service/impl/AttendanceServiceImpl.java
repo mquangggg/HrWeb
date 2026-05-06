@@ -42,6 +42,11 @@ public class AttendanceServiceImpl implements AttendanceService {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
+        // Kiểm tra giờ check-in hợp lệ (ví dụ: không cho phép check-in từ 8 PM đến 6 AM)
+        if (now.isBefore(LocalTime.of(6, 0)) || now.isAfter(LocalTime.of(20, 0))) {
+            throw new RuntimeException("Giờ check-in không hợp lệ. Vui lòng check-in từ 06:00 AM đến 08:00 PM.");
+        }
+
         // Kiểm tra xem hôm nay đã check-in chưa
         if (attendanceRepository.findByEmployeeIdAndDate(employee.getId(), today).isPresent()) {
             throw new RuntimeException("Bạn đã check-in trong ngày hôm nay rồi!");

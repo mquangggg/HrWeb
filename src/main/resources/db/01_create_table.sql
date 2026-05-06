@@ -58,7 +58,7 @@ CREATE TABLE payrolls (
     employee_id BIGINT,
     month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
     year INT NOT NULL,
-    working_days INT,
+    working_days DECIMAL(10,2),
     absent_days INT DEFAULT 0,
     base_salary DECIMAL(15,2),
     allowance DECIMAL(15,2) DEFAULT 0,

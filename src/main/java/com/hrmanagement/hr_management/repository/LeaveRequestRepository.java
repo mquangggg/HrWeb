@@ -26,4 +26,9 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     // Kiểm tra overlap đơn nghỉ phép
     boolean existsByEmployeeIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
             Long employeeId, java.util.Collection<LeaveStatus> statuses, java.time.LocalDate endDate, java.time.LocalDate startDate);
+
+    long countByStatus(LeaveStatus status);
+
+    long countByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            LeaveStatus status, java.time.LocalDate date1, java.time.LocalDate date2);
 }

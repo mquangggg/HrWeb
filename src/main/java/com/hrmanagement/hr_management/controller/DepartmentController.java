@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.hrmanagement.hr_management.dto.request.DepartmentRequest;
 import com.hrmanagement.hr_management.dto.response.DepartmentResponse;
@@ -40,6 +41,7 @@ public class DepartmentController {
 
     // Thêm mới phòng ban
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DepartmentResponse> createDepartment(@RequestBody DepartmentRequest request) {
         DepartmentResponse createdDepartment = departmentService.createDepartment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDepartment);
@@ -47,12 +49,14 @@ public class DepartmentController {
 
     // Cập nhật thông tin phòng ban
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DepartmentResponse> updateDepartment(@PathVariable Long id, @RequestBody DepartmentRequest request) {
         return ResponseEntity.ok(departmentService.updateDepartment(id, request));
     }
 
     // Xóa phòng ban
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return ResponseEntity.noContent().build();

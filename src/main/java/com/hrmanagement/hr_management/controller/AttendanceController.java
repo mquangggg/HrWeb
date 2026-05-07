@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.hrmanagement.hr_management.dto.response.AttendanceResponse;
 import com.hrmanagement.hr_management.dto.response.PageResponse;
@@ -47,9 +48,19 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.getMyAttendances(email, page, size));
     }
 
-    // Dành cho Manager/Admin xem tất cả (phân trang)
+    // Lấy dữ liệu chấm công theo tháng để hiển thị Lịch
+    @GetMapping("/calendar")
+    public ResponseEntity<java.util.List<AttendanceResponse>> getAttendanceCalendar(
+            Principal principal,
+            @RequestParam int month,
+            @RequestParam int year) {
+        String email = principal.getName();
+        return ResponseEntity.ok(attendanceService.getAttendanceByMonth(email, month, year));
+    }
+
+    // Dành cho mọi người xem tất cả (phân trang)
     @GetMapping
-    // @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')") // Sẽ cấu hình sau ở Giai đoạn 6
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'EMPLOYEE')")
     public ResponseEntity<PageResponse<AttendanceResponse>> getAllAttendances(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

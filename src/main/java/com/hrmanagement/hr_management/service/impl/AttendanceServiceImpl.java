@@ -110,11 +110,31 @@ public class AttendanceServiceImpl implements AttendanceService {
         return mapToPageResponse(pageData);
     }
 
+    @Override
+    public java.util.List<AttendanceResponse> getAttendanceByMonth(String email, int month, int year) {
+        Employee emp = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Nhân viên không tồn tại"));
+
+        java.time.LocalDate start = java.time.LocalDate.of(year, month, 1);
+        java.time.LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+        return attendanceRepository.findByEmployeeIdAndDateBetween(emp.getId(), start, end).stream()
+                .map(this::mapToResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     private AttendanceResponse mapToResponse(Attendance attendance) {
+        Employee emp = attendance.getEmployee();
+        String firstName = emp.getFirstName() != null ? emp.getFirstName() : "";
+        String lastName = emp.getLastName() != null ? emp.getLastName() : "";
+        String fullName = (firstName + " " + lastName).trim();
+        if (fullName.isEmpty()) fullName = "N/A";
+
         return AttendanceResponse.builder()
                 .id(attendance.getId())
-                .employeeId(attendance.getEmployee().getId())
-                .employeeName(attendance.getEmployee().getFirstName() + " " + attendance.getEmployee().getLastName())
+                .employeeId(emp.getId())
+                .employeeName(fullName)
+                .email(emp.getEmail())
                 .date(attendance.getDate())
                 .checkIn(attendance.getCheckIn())
                 .checkOut(attendance.getCheckOut())

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.hrmanagement.hr_management.dto.request.EmployeeCreateRequest;
 import com.hrmanagement.hr_management.dto.request.EmployeeUpdateRequest;
@@ -32,7 +33,10 @@ public class EmployeeController {
 
     // GET /api/v1/employees?page=0&size=10&keyword=abc
     // GET /api/v1/employees?page=0&size=10&keyword=abc&departmentId=1&positionId=2
+    // GET /api/v1/employees?page=0&size=10&keyword=abc
+    // GET /api/v1/employees?page=0&size=10&keyword=abc&departmentId=1&positionId=2
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<PageResponse<EmployeeResponse>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -44,18 +48,21 @@ public class EmployeeController {
 
     // GET /api/v1/employees/{id}
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable Long id) {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
     // POST /api/v1/employees
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EmployeeResponse> createEmployee(@Valid @RequestBody EmployeeCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.createEmployee(request));
     }
 
     // PUT /api/v1/employees/{id}
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeUpdateRequest request) {
@@ -64,6 +71,7 @@ public class EmployeeController {
 
     // PATCH /api/v1/employees/{id}/status?status=INACTIVE
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<EmployeeResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam EmployeeStatus status) {
@@ -72,6 +80,7 @@ public class EmployeeController {
 
     // DELETE /api/v1/employees/{id}
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();

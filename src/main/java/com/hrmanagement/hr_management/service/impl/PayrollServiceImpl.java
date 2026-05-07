@@ -43,14 +43,14 @@ public class PayrollServiceImpl implements PayrollService {
 
     @Override
     public List<PayrollResponse> calculatePayroll(int month, int year) {
-        // Lấy danh sách nhân viên đang hoạt động (Filter ngay ở DB)
-        List<Employee> activeEmployees = employeeRepository.findByStatus(EmployeeStatus.active);
+        // Lấy tất cả nhân viên để đảm bảo tính lương cho cả người vừa nghỉ (inactive) nhưng có công
+        List<Employee> allEmployees = employeeRepository.findAll();
 
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
         List<PayrollResponse> results = new ArrayList<>();
-        for (Employee emp : activeEmployees) {
+        for (Employee emp : allEmployees) {
             // Lấy danh sách chấm công trong tháng
             List<Attendance> attendances = attendanceRepository.findByEmployeeIdAndDateBetween(
                     emp.getId(), startDate, endDate);
@@ -86,12 +86,17 @@ public class PayrollServiceImpl implements PayrollService {
 
             // Lương thực nhận = (baseSalary / 22) * ngày công + allowance cố định
             BigDecimal dailySalary = baseSalary
-                    .divide(new BigDecimal(STANDARD_WORKING_DAYS), 4, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(STANDARD_WORKING_DAYS), 4, RoundingMode.HALF_UP);
             
             BigDecimal netSalary = dailySalary
                     .multiply(totalEquivalentDays)
                     .add(allowance)
                     .setScale(2, RoundingMode.HALF_UP);
+
+            // Chỉ lưu bảng lương nếu netSalary > 0 (Tránh tạo rác cho nhân viên không làm ngày nào)
+            if (netSalary.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
 
             // Lưu payroll
             Payroll payroll = payrollRepository
@@ -122,10 +127,15 @@ public class PayrollServiceImpl implements PayrollService {
 
     private PayrollResponse mapToResponse(Payroll payroll) {
         Employee emp = payroll.getEmployee();
+        String firstName = emp.getFirstName() != null ? emp.getFirstName() : "";
+        String lastName = emp.getLastName() != null ? emp.getLastName() : "";
+        String fullName = (firstName + " " + lastName).trim();
+        if (fullName.isEmpty()) fullName = "N/A";
+
         return PayrollResponse.builder()
                 .id(payroll.getId())
                 .employeeId(emp.getId())
-                .employeeName(emp.getFirstName() + " " + emp.getLastName())
+                .employeeName(fullName)
                 .email(emp.getEmail())
                 .departmentName(emp.getDepartment() != null ? emp.getDepartment().getName() : "N/A")
                 .month(payroll.getMonth())

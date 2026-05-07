@@ -16,4 +16,7 @@ public interface AttendanceService {
 
     // Lấy lịch sử chấm công của tất cả nhân viên (dành cho Admin/Manager)
     PageResponse<AttendanceResponse> getAllAttendances(int page, int size);
+
+    // Lấy dữ liệu chấm công theo tháng của 1 nhân viên
+    java.util.List<AttendanceResponse> getAttendanceByMonth(String email, int month, int year);
 }

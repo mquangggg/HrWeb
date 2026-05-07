@@ -37,7 +37,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Hàm cấu hình chuỗi bảo mật
         http
-            .csrf(AbstractHttpConfigurer::disable) // Vô hiệu hóa CSRF
+            .csrf(AbstractHttpConfigurer::disable) // Vô hiệu hóa CSRF, CSRF là cơ chế bảo mật để ngăn chặn tấn công Cross-Site Request Forgery
+            // vô hiệu hóa để dev mode, khi deploy production cần phải bật CSRF
             .authorizeHttpRequests(auth -> auth // Cấu hình quyền truy cập
                 // Cho phép tất cả static resources và API auth
                 .requestMatchers(

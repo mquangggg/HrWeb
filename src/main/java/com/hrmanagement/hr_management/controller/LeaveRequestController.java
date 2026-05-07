@@ -48,8 +48,9 @@ public class LeaveRequestController {
         return ResponseEntity.ok(leaveRequestService.getMyLeaveRequests(email, page, size));
     }
 
-    // Xem tất cả đơn (Dành cho tất cả mọi người)
+    // Xem tất cả đơn (Dành cho mọi người xem - Read-only)
     @GetMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'EMPLOYEE')")
     public ResponseEntity<PageResponse<LeaveResponse>> getAllLeaveRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

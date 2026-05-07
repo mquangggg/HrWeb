@@ -72,6 +72,12 @@ function updateClock() {
 
     $('#clock').text(time);
     $('#header-date').text(date);
+    
+    // Cập nhật banner chào mừng (chỉ cập nhật một lần hoặc định kỳ)
+    if ($('#banner-date').text() === '...') {
+        $('#banner-date').text(date);
+        $('#banner-month-year').text(`Tháng ${pad(now.getMonth()+1)}, ${now.getFullYear()}`);
+    }
 }
 updateClock();
 setInterval(updateClock, 1000); // cập nhật mỗi giây
@@ -105,17 +111,41 @@ function loadUserInfo() {
             // Lưu lại thông tin mới nhất
             localStorage.setItem('user', JSON.stringify(user));
             renderUserToDOM(user);
+            applyRolePermissions(user.role);
+            fetchNotifications(); 
+            if (user.role === 'ADMIN') {
+                fetchDashboardStats();
+            }
+            initAttendanceCalendar(); // Khởi tạo lịch chấm công
         },
         error: function(xhr) {
             console.error('Không thể lấy thông tin user, dùng dữ liệu cũ');
             const userStr = localStorage.getItem('user');
             if (userStr) {
-                renderUserToDOM(JSON.parse(userStr));
+                const user = JSON.parse(userStr);
+                renderUserToDOM(user);
+                applyRolePermissions(user.role);
             } else {
                 handleLogout();
             }
         }
     });
+}
+
+function applyRolePermissions(role) {
+    console.log('Applying permissions for role:', role);
+    
+    // Luôn hiện tất cả menu để nhân viên có thể vào xem (Read-only)
+    $('#nav-employee, #nav-department, #nav-position, #nav-payroll').show();
+    $('.nav-section-label').show();
+
+    if (role === 'EMPLOYEE') {
+        // Chỉ ẩn các nút hành động quản trị (Thêm, Sửa, Xóa, Tính lương, Duyệt)
+        $('.admin-only').hide();
+    } else if (role === 'MANAGER') {
+        // Manager có thể thấy tất cả nhưng ta có thể giới hạn một số nút của ADMIN nếu muốn
+        // Hiện tại MANAGER và ADMIN dùng chung admin-only
+    }
 }
 
 function renderUserToDOM(user) {
@@ -199,6 +229,32 @@ function empAvatar(emp) {
 // ===================================================
 //  AVATAR nhân viên – dùng initials từ firstName + lastName
 // ===================================================
+//  DASHBOARD – Thống kê (Stats)
+// ===================================================
+function fetchDashboardStats() {
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/dashboard/stats',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(res) {
+            const stats = res.data;
+            const now = new Date();
+            const month = now.getMonth() + 1;
+
+            $('#stat-total-employees').text(stats.totalEmployees);
+            $('#stat-present-today').text(stats.presentToday);
+            $('#stat-on-leave').text(stats.onLeaveToday);
+            $('#stat-total-salary').text(formatVND(stats.totalSalaryCurrentMonth));
+            $('#stat-payroll-label').text(`Lương tháng ${month < 10 ? '0' + month : month}`);
+        },
+        error: function(xhr) {
+            console.error('Lỗi lấy thống kê dashboard:', xhr);
+        }
+    });
+}
+
+// ===================================================
 function empAvatarFromApi(emp) {
     const colors = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899','#ef4444','#3b82f6'];
     const idx = (emp.id || 0) % colors.length;
@@ -207,29 +263,114 @@ function empAvatarFromApi(emp) {
 }
 
 // ===================================================
-//  DASHBOARD – Hiện nhân viên gần đây (5 người)
+//  DASHBOARD – Thông báo (Notifications)
 // ===================================================
-function renderDashboardEmployees() {
-    const recent = employees.slice(0, 5);
-    let html = '';
-    recent.forEach(function(emp) {
-        const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
-        html += `<tr>
-            <td class="ps-3">
-                <div class="d-flex align-items-center">
-                    ${empAvatarFromApi(emp)}
-                    <div>
-                        <div class="fw-medium" style="font-size:13px">${fullName}</div>
-                        <div class="text-muted" style="font-size:11px">${emp.email}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="text-muted" style="font-size:13px">${emp.departmentName || '—'}</td>
-            <td>${roleBadge(emp.role)}</td>
-            <td>${statusBadge(emp.status)}</td>
-        </tr>`;
+function fetchNotifications() {
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/notifications',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(res) {
+            renderNotifications(res.data);
+        },
+        error: function(xhr) {
+            console.error('Lỗi lấy thông báo:', xhr);
+        }
     });
-    $('#dashboard-emp-tbody').html(html || '<tr><td colspan="4" class="text-center text-muted py-3">Chưa có nhân viên</td></tr>');
+}
+
+function renderNotifications(list) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = user?.role === 'ADMIN';
+
+    let html = '';
+    list.forEach(function(n) {
+        const date = new Date(n.publishedDate).toLocaleString('vi-VN', { 
+            hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' 
+        });
+
+        const iconMap = {
+            info: 'info-circle text-info',
+            success: 'check-circle text-success',
+            warning: 'exclamation-triangle text-warning',
+            danger: 'exclamation-circle text-danger'
+        };
+        const icon = iconMap[n.type] || iconMap.info;
+
+        html += `
+        <div class="d-flex align-items-start mb-3 border-bottom pb-3 notification-item">
+            <div class="me-3 mt-1">
+                <i class="fas fa-${icon} fa-lg"></i>
+            </div>
+            <div style="flex:1">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h6 class="fw-bold mb-0" style="font-size:14px">${n.title}</h6>
+                    <small class="text-muted" style="font-size:11px">${date}</small>
+                </div>
+                <p class="mb-1 text-muted" style="font-size:13px">${n.content}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-primary" style="font-size:11px">
+                        <i class="fas fa-user-edit me-1"></i> ${n.publishedBy}
+                    </small>
+                    ${isAdmin ? `
+                    <button class="btn btn-link btn-sm text-danger p-0" onclick="deleteNotification(${n.id})" title="Xóa thông báo">
+                        <i class="fas fa-trash-alt" style="font-size:12px"></i>
+                    </button>` : ''}
+                </div>
+            </div>
+        </div>`;
+    });
+    $('#notification-feed').html(html || '<div class="text-center text-muted py-4">Chưa có thông báo nào</div>');
+}
+
+function openNotificationModal() {
+    $('#notif-title, #notif-content').val('');
+    $('#notif-type').val('info');
+    new bootstrap.Modal($('#notification-modal')[0]).show();
+}
+
+function saveNotification() {
+    const title = $('#notif-title').val().trim();
+    const content = $('#notif-content').val().trim();
+    const type = $('#notif-type').val();
+
+    if (!title || !content) {
+        alert('Vui lòng nhập đầy đủ tiêu đề và nội dung!');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/notifications',
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        contentType: 'application/json',
+        data: JSON.stringify({ title, content, type }),
+        success: function() {
+            bootstrap.Modal.getInstance($('#notification-modal')[0]).hide();
+            fetchNotifications();
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Lỗi khi đăng thông báo');
+        }
+    });
+}
+
+function deleteNotification(id) {
+    if (!confirm('Bạn có chắc muốn xóa thông báo này?')) return;
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/notifications/' + id,
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function() {
+            fetchNotifications();
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Lỗi khi xóa thông báo');
+        }
+    });
 }
 
 // ===================================================
@@ -255,7 +396,6 @@ function fetchEmployees(page) {
             empPagination.totalElements = pageData.totalElements;
             renderEmployees();
             renderEmpPagination();
-            renderDashboardEmployees();
         },
         error: function(xhr) {
             console.error('Lỗi lấy danh sách nhân viên:', xhr);
@@ -268,9 +408,13 @@ function fetchEmployees(page) {
 // ===================================================
 function renderEmployees() {
     let html = '';
+    const user = JSON.parse(localStorage.getItem('user'));
+    const role = user?.role || 'EMPLOYEE';
+
     employees.forEach(function(emp, i) {
         const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
         const rowNum   = empPagination.page * empPagination.size + i + 1;
+
         html += `<tr>
             <td class="ps-3 text-muted">${rowNum}</td>
             <td>
@@ -286,15 +430,17 @@ function renderEmployees() {
             <td style="font-size:13px">${emp.departmentName || '—'}</td>
             <td style="font-size:13px">${emp.positionName || '—'}</td>
             <td>${roleBadge(emp.role)}</td>
-            <td style="font-size:13px">${formatVND(emp.baseSalary || 0)}</td>
+            <td style="font-size:13px">${role === 'ADMIN' ? formatVND(emp.baseSalary || 0) : '***'}</td>
             <td>${statusBadge(emp.status)}</td>
             <td class="text-center">
+                ${(role === 'ADMIN' || (role === 'MANAGER' && emp.departmentId === user.departmentId)) ? `
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openEmpModal(${emp.id})">
                     <i class="fas fa-pen"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('employee', ${emp.id})">
                     <i class="fas fa-trash"></i>
                 </button>
+                ` : '—'}
             </td>
         </tr>`;
     });
@@ -504,6 +650,9 @@ function fetchDepartments() {
 
 function renderDepartments() {
     let html = '';
+    const user = JSON.parse(localStorage.getItem('user'));
+    const role = user?.role || 'EMPLOYEE';
+
     departments.forEach(function(dept, i) {
         html += `<tr>
             <td class="ps-3 text-muted">${i + 1}</td>
@@ -515,14 +664,15 @@ function renderDepartments() {
             <td style="font-size:13px">${dept.managerName || 'Chưa có'}</td>
             <td><span class="badge bg-light text-dark border">${dept.employeeCount || 0} người</span></td>
             <td class="text-muted" style="font-size:13px">${dept.description || ''}</td>
-            <td class="text-center">
+            ${role === 'ADMIN' ? `
+            <td class="text-center admin-only">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openDeptModal(${dept.id})">
                     <i class="fas fa-pen"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('department', ${dept.id})">
                     <i class="fas fa-trash"></i>
                 </button>
-            </td>
+            </td>` : ''}
         </tr>`;
     });
     $('#department-tbody').html(html || '<tr><td colspan="6" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
@@ -604,6 +754,9 @@ function fetchPositions() {
 
 function renderPositions() {
     let html = '';
+    const user = JSON.parse(localStorage.getItem('user'));
+    const role = user?.role || 'EMPLOYEE';
+
     positions.forEach(function(pos, i) {
         html += `<tr>
             <td class="ps-3 text-muted">${i + 1}</td>
@@ -612,15 +765,16 @@ function renderPositions() {
                     ${pos.name}
                 </a>
             </td>
-            <td style="font-size:13px">${formatVND(pos.baseSalary || 0)}</td>
-            <td class="text-center">
+            <td style="font-size:13px">${role === 'ADMIN' ? formatVND(pos.baseSalary || 0) : '***'}</td>
+            ${role === 'ADMIN' ? `
+            <td class="text-center admin-only">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openPosModal(${pos.id})">
                     <i class="fas fa-pen"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteRow('position', ${pos.id})">
                     <i class="fas fa-trash"></i>
                 </button>
-            </td>
+            </td>` : ''}
         </tr>`;
     });
     $('#position-tbody').html(html || '<tr><td colspan="4" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
@@ -677,86 +831,159 @@ function savePosition() {
 }
 
 // ===================================================
-//  CHẤM CÔNG – Render bảng
+//  CHẤM CÔNG – Calendar & Table
 // ===================================================
 let attPagination = { page: 0, size: 10, totalPages: 0 };
+let currentAttView = 'calendar'; // 'calendar' hoặc 'table'
 
-function fetchAttendances(page = 0) {
-    const token = localStorage.getItem('token');
-    // Mặc định gọi API get me (có thể đổi thành getAll nếu là Admin)
-    $.ajax({
-        url: `/api/v1/attendances/me?page=${page}&size=${attPagination.size}`,
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token },
-        success: function(res) {
-            attPagination.page = res.currentPage;
-            attPagination.totalPages = res.totalPages;
-            renderAttendances(res.data);
-            updateAttendanceStats(res.data);
-            // Có thể thêm render phân trang sau
-        },
-        error: function(xhr) {
-            console.error('Lỗi khi tải lịch sử chấm công:', xhr);
-        }
-    });
+function initAttendanceCalendar() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = user.role === 'ADMIN' || user.role === 'MANAGER';
+    
+    // Nếu là Admin, mặc định xem dạng Bảng vì Lịch sẽ bị ghi đè nhiều người
+    if (isAdmin) {
+        currentAttView = 'table';
+        $('#attendance-calendar-container').hide();
+        $('#attendance-table-container').show();
+        $('#btn-toggle-att').html('<i class="fas fa-calendar-alt me-1"></i> Xem lịch cá nhân');
+    }
+
+    const now = new Date();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    $('#att-month-calendar').val(monthStr);
+    
+    // Lắng nghe sự kiện đổi tháng
+    $('#att-month-calendar').off('change').on('change', fetchAttendances);
+    
+    fetchAttendances();
 }
 
-function renderAttendances(list) {
+function toggleAttView() {
+    currentAttView = (currentAttView === 'calendar') ? 'table' : 'calendar';
+    if (currentAttView === 'calendar') {
+        $('#attendance-calendar-container').show();
+        $('#attendance-table-container').hide();
+        $('#btn-toggle-att').html('<i class="fas fa-table me-1"></i> Xem dạng bảng');
+    } else {
+        $('#attendance-calendar-container').hide();
+        $('#attendance-table-container').show();
+        $('#btn-toggle-att').html('<i class="fas fa-calendar-alt me-1"></i> Xem dạng lịch');
+    }
+    fetchAttendances();
+}
+
+function fetchAttendances() {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const monthVal = $('#att-month-calendar').val();
+    if (!monthVal) return;
+    
+    const [year, month] = monthVal.split('-');
+
+    // Admin/Manager xem dạng bảng thì lấy tất cả.
+    // Các trường hợp còn lại lấy theo tháng của cá nhân.
+    const isAdmin = user.role === 'ADMIN' || user.role === 'MANAGER';
+    
+    if (currentAttView === 'calendar' || !isAdmin) {
+        $.ajax({
+            url: `/api/v1/attendances/calendar?month=${parseInt(month)}&year=${year}`,
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + token },
+            success: function(list) {
+                renderAttendanceCalendar(list, parseInt(month), parseInt(year));
+                calculateMonthlyStats(list);
+            }
+        });
+    } else {
+        $.ajax({
+            url: `/api/v1/attendances?page=0&size=50`,
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + token },
+            success: function(res) {
+                renderAttendanceTable(res.data);
+            }
+        });
+    }
+}
+
+function renderAttendanceCalendar(list, month, year) {
+    const container = $('#attendance-calendar-container');
+    container.empty();
+
+    // Headers
+    ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].forEach(d => 
+        container.append(`<div class="calendar-day-header">${d}</div>`));
+
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const offset = (firstDay === 0) ? 6 : firstDay - 1;
+
+    for (let i = 0; i < offset; i++) container.append('<div class="calendar-day empty"></div>');
+
+    const today = new Date();
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const att = list.find(a => a.date === dateStr);
+        const isToday = today.getFullYear() === year && (today.getMonth()+1) === month && today.getDate() === d;
+        
+        let content = '';
+        if (att) {
+            const isLate = att.checkIn && att.checkIn > '08:30:00';
+            const isEarly = att.checkOut && att.checkOut < '17:30:00';
+            content = `
+                <div class="att-info">
+                    <div class="time-in"><i class="far fa-clock"></i> ${att.checkIn ? att.checkIn.substring(0, 5) : '--:--'}</div>
+                    <div class="time-out"><i class="fas fa-sign-out-alt"></i> ${att.checkOut ? att.checkOut.substring(0, 5) : '--:--'}</div>
+                    ${isLate ? '<div class="badge-late mt-1">Đi muộn</div>' : ''}
+                    ${isEarly ? '<div class="badge-early">Về sớm</div>' : ''}
+                </div>`;
+        }
+        container.append(`<div class="calendar-day ${isToday ? 'today' : ''}"><div class="day-num">${d}</div>${content}</div>`);
+    }
+}
+
+function renderAttendanceTable(list) {
     let html = '';
     list.forEach(function(att) {
-        const statusColor = att.status === 'present' ? 'success' :
-                            att.status === 'late'    ? 'warning' : 'danger';
-        
-        const statusText  = att.status === 'present' ? 'Đúng giờ' :
-                            att.status === 'late'    ? 'Đi muộn' : 'Vắng mặt';
-
-        // Tính số giờ làm nếu có cả checkIn và checkOut
+        const statusColor = att.status === 'present' ? 'success' : att.status === 'late' ? 'warning' : 'danger';
+        const statusText  = att.status === 'present' ? 'Đúng giờ' : att.status === 'late' ? 'Đi muộn' : 'Vắng mặt';
         let hours = '—';
         if (att.checkIn && att.checkOut) {
             const inTime = new Date(`2000-01-01T${att.checkIn}`);
             const outTime = new Date(`2000-01-01T${att.checkOut}`);
             hours = ((outTime - inTime) / (1000 * 60 * 60)).toFixed(1) + 'h';
         }
-
         html += `<tr>
-            <td class="ps-3 fw-medium">${att.employeeName}</td>
+            <td class="ps-3">
+                <div class="fw-medium">${att.employeeName}</div>
+                <div class="text-muted" style="font-size:11px">${att.email || ''}</div>
+            </td>
             <td style="font-size:13px">${att.date}</td>
-            <td style="font-size:13px">${att.checkIn  ? att.checkIn.substring(0, 5) : '—'}</td>
-            <td style="font-size:13px">${att.checkOut ? att.checkOut.substring(0, 5) : '—'}</td>
+            <td style="font-size:13px" class="text-success fw-medium">${att.checkIn ? att.checkIn.substring(0, 5) : '--:--'}</td>
+            <td style="font-size:13px" class="text-info fw-medium">${att.checkOut ? att.checkOut.substring(0, 5) : '--:--'}</td>
             <td style="font-size:13px">${hours}</td>
             <td><span class="badge bg-${statusColor}">${statusText}</span></td>
         </tr>`;
     });
-    $('#attendance-tbody').html(html || '<tr><td colspan="6" class="text-center text-muted py-3">Chưa có lịch sử chấm công</td></tr>');
+    $('#attendance-tbody').html(html || '<tr><td colspan="6" class="text-center py-3">Không có dữ liệu</td></tr>');
 }
-fetchAttendances();
 
-function updateAttendanceStats(list) {
-    let present = 0, late = 0, absent = 0;
+function calculateMonthlyStats(list) {
+    let totalWork = 0, lateCount = 0, earlyCount = 0, totalHours = 0;
     list.forEach(att => {
-        if (att.status === 'present') present++;
-        else if (att.status === 'late') late++;
-        else absent++;
+        if (att.checkIn) {
+            totalWork++;
+            if (att.checkIn > '08:30:00') lateCount++;
+        }
+        if (att.checkOut && att.checkOut < '17:30:00') earlyCount++;
+        if (att.checkIn && att.checkOut) {
+            totalHours += (new Date(`2000-01-01T${att.checkOut}`) - new Date(`2000-01-01T${att.checkIn}`)) / 3600000;
+        }
     });
-
-    const total = list.length || 1; // Tránh chia cho 0
-    const pPerc = Math.round((present / total) * 100);
-    const lPerc = Math.round((late / total) * 100);
-    const aPerc = Math.round((absent / total) * 100);
-
-    // Cập nhật DOM (Dựa vào cấu trúc HTML hiện tại)
-    // Sẽ cần gán thêm ID vào các thẻ số liệu nếu chưa có, 
-    // vì hiện tại cấu trúc HTML dùng text cứng.
-    // Tạm thời ta dùng jQuery tìm phần tử theo màu (text-success = đúng giờ, text-warning = đi muộn...)
-    
-    $('.table-card:contains("Thống kê hôm nay") .text-success.small:last').text(present);
-    $('.table-card:contains("Thống kê hôm nay") .bg-success').css('width', pPerc + '%');
-
-    $('.table-card:contains("Thống kê hôm nay") .text-warning.small:last').text(late);
-    $('.table-card:contains("Thống kê hôm nay") .bg-warning').css('width', lPerc + '%');
-
-    $('.table-card:contains("Thống kê hôm nay") .text-danger.small:last').text(absent);
-    $('.table-card:contains("Thống kê hôm nay") .bg-danger').css('width', aPerc + '%');
+    $('#stat-att-total').text(totalWork);
+    $('#stat-att-late').text(lateCount);
+    $('#stat-att-early').text(earlyCount);
+    $('#stat-att-avg').text((totalWork > 0 ? (totalHours / totalWork).toFixed(1) : 0) + 'h');
 }
 
 function doCheckIn() {
@@ -848,15 +1075,16 @@ function renderLeaveRequests(list, user) {
             <td><span class="badge bg-light text-dark border">${leave.days} ngày</span></td>
             <td class="text-muted" style="font-size:13px">${leave.reason}</td>
             <td>${statusBadge(leave.status)}</td>
-            <td class="text-center">
+            ${role !== 'EMPLOYEE' ? `
+            <td class="text-center admin-only">
                 ${canApprove ? `
                 <button class="btn btn-sm btn-success me-1" onclick="updateLeaveStatus(${leave.id}, 'approved')">
                     <i class="fas fa-check"></i>
                 </button>
                 <button class="btn btn-sm btn-danger" onclick="updateLeaveStatus(${leave.id}, 'rejected')">
                     <i class="fas fa-times"></i>
-                </button>` : (leave.approverByName ? `<span class="small text-muted">Duyệt bởi: ${leave.approverByName}</span>` : '—')}
-            </td>
+                </button>` : (leave.approverByName ? `<span class="small text-muted">Duyệt: ${leave.approverByName}</span>` : '—')}
+            </td>` : ''}
         </tr>`;
     });
     $('#leave-tbody').html(html || '<tr><td colspan="8" class="text-center text-muted py-3">Không có đơn nghỉ phép nào</td></tr>');
@@ -952,10 +1180,14 @@ function fetchPayrolls() {
 function renderPayroll(list) {
     let html = '';
     list.forEach(function(p) {
+        const nameParts = p.employeeName.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+
         html += `<tr>
             <td class="ps-3">
                 <div class="d-flex align-items-center">
-                    ${empAvatarFromApi({ id: p.employeeId, firstName: p.employeeName.split(' ')[0], lastName: p.employeeName.split(' ').pop() })}
+                    ${empAvatarFromApi({ id: p.employeeId, firstName: firstName, lastName: lastName })}
                     <div>
                         <div class="fw-medium" style="font-size:13px">${p.employeeName}</div>
                         <div class="text-muted" style="font-size:11px">${p.email}</div>
@@ -966,12 +1198,15 @@ function renderPayroll(list) {
             <td style="font-size:13px">${formatVND(p.baseSalary)}</td>
             <td style="font-size:13px" class="fw-medium text-primary">${p.workingDays}</td>
             <td style="font-size:13px" class="text-success">+${formatVND(p.allowance)}</td>
-            <td style="font-size:13px" class="text-danger">-${formatVND(p.deduction)}</td>
+            <td style="font-size:13px" class="text-danger">-${formatVND(p.deduction || 0)}</td>
             <td class="fw-bold">${formatVND(p.netSalary)}</td>
             <td><span class="badge bg-success">Đã tính</span></td>
         </tr>`;
     });
-    $('#payroll-tbody').html(html || '<tr><td colspan="8" class="text-center text-muted py-3">Chưa có dữ liệu lương tháng này. Nhấn "Tính lương" để bắt đầu.</td></tr>');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = user?.role === 'ADMIN';
+    const emptyMsg = isAdmin ? 'Chưa có dữ liệu lương tháng này. Nhấn "Tính lương" để bắt đầu.' : 'Chưa có dữ liệu lương tháng này.';
+    $('#payroll-tbody').html(html || `<tr><td colspan="8" class="text-center text-muted py-3">${emptyMsg}</td></tr>`);
 }
 
 function updatePayrollStats(list) {

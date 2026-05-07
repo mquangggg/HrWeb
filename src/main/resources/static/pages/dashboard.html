@@ -114,24 +114,24 @@
                         <div class="col">
                             <h4 class="fw-bold mb-1">Xin chào, <span id="welcome-name">Admin</span>! 👋</h4>
                             <p class="mb-0" style="opacity:.75">
-                                Hôm nay có <strong>128 nhân viên</strong> có mặt &amp;
-                                <strong>3 đơn nghỉ phép</strong> chờ duyệt.
+                                Hôm nay là <strong id="banner-date">...</strong>.
+                                Có <strong id="banner-attendance-count">...</strong> nhân viên có mặt.
                             </p>
                         </div>
                         <div class="col-auto text-end">
-                            <div style="opacity:.5; font-size:12px">Tháng 04, 2026</div>
+                            <div style="opacity:.5; font-size:12px" id="banner-month-year">Tháng --, 202-</div>
                             <div id="clock" class="text-white">08:00:00</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 4 thẻ thống kê -->
-                <div class="row g-3 mb-4">
+                <!-- 4 thẻ thống kê (Admin Only) -->
+                <div class="row g-3 mb-4 admin-only">
                     <div class="col-md-3">
                         <div class="stat-card bg-primary text-white">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <div class="stat-value">142</div>
+                                    <div class="stat-value" id="stat-total-employees">0</div>
                                     <div class="stat-label">Tổng nhân viên</div>
                                     <small style="opacity:.7">↑ 5 người so với tháng trước</small>
                                 </div>
@@ -143,7 +143,7 @@
                         <div class="stat-card bg-success text-white">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <div class="stat-value">128</div>
+                                    <div class="stat-value" id="stat-present-today">0</div>
                                     <div class="stat-label">Có mặt hôm nay</div>
                                     <small style="opacity:.7">14 người vắng mặt</small>
                                 </div>
@@ -155,7 +155,7 @@
                         <div class="stat-card bg-warning text-white">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <div class="stat-value">7</div>
+                                    <div class="stat-value" id="stat-on-leave">0</div>
                                     <div class="stat-label">Đang nghỉ phép</div>
                                     <small style="opacity:.7">3 đơn chờ duyệt</small>
                                 </div>
@@ -167,8 +167,8 @@
                         <div class="stat-card bg-info text-white">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <div class="stat-value">1.2 tỷ</div>
-                                    <div class="stat-label">Lương tháng 04</div>
+                                    <div class="stat-value" id="stat-total-salary">0 ₫</div>
+                                    <div class="stat-label" id="stat-payroll-label">Lương tháng --</div>
                                     <small style="opacity:.7">Chưa thanh toán</small>
                                 </div>
                                 <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
@@ -182,7 +182,7 @@
                     <div class="col-6 col-md-3">
                         <a class="quick-btn" onclick="showSection('employee')">
                             <i class="fas fa-user-plus" style="color:#6366f1"></i>
-                            Thêm nhân viên
+                            Nhân viên
                         </a>
                     </div>
                     <div class="col-6 col-md-3">
@@ -198,35 +198,25 @@
                         </a>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a class="quick-btn" onclick="showSection('payroll')">
+                        <a class="quick-btn admin-only" onclick="showSection('payroll')">
                             <i class="fas fa-calculator" style="color:#06b6d4"></i>
                             Tính lương
                         </a>
                     </div>
                 </div>
 
-                <!-- Bảng nhân viên gần đây -->
+                <!-- Bảng tin thông báo -->
                 <div class="table-card">
                     <div class="table-card-header">
                         <div class="table-card-title">
-                            <i class="fas fa-users text-primary me-2"></i>Nhân viên gần đây
+                            <i class="fas fa-bullhorn text-primary me-2"></i>Thông báo mới nhất
                         </div>
-                        <button class="btn btn-sm btn-indigo" onclick="showSection('employee')">
-                            Xem tất cả <i class="fas fa-arrow-right ms-1"></i>
+                        <button class="btn btn-sm btn-indigo admin-only" onclick="openNotificationModal()">
+                            <i class="fas fa-plus me-1"></i> Đăng thông báo
                         </button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-3">Nhân viên</th>
-                                    <th>Phòng ban</th>
-                                    <th>Vai trò</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboard-emp-tbody"></tbody>
-                        </table>
+                    <div class="p-3" id="notification-feed" style="max-height: 400px; overflow-y: auto;">
+                        <div class="text-center text-muted py-4">Đang tải thông báo...</div>
                     </div>
                 </div>
             </div><!-- /section-dashboard -->
@@ -250,7 +240,7 @@
                             <input type="text" class="form-control form-control-sm" id="emp-search"
                                 placeholder="Tìm theo tên, email..." style="width:220px" oninput="filterEmployees()">
                             <!-- Nút thêm mới -->
-                            <button class="btn btn-sm btn-indigo" onclick="openEmpModal()">
+                            <button class="btn btn-sm btn-indigo admin-only" onclick="openEmpModal()">
                                 <i class="fas fa-plus me-1"></i> Thêm nhân viên
                             </button>
                         </div>
@@ -267,7 +257,7 @@
                                     <th>Vai trò</th>
                                     <th>Lương cơ bản</th>
                                     <th>Trạng thái</th>
-                                    <th class="text-center">Thao tác</th>
+                                    <th class="text-center admin-only">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="employee-tbody"></tbody>
@@ -286,7 +276,7 @@
                         <div class="table-card-title">
                             <i class="fas fa-building text-primary me-2"></i>Quản lý phòng ban
                         </div>
-                        <button class="btn btn-sm btn-indigo" onclick="openDeptModal()">
+                        <button class="btn btn-sm btn-indigo admin-only" onclick="openDeptModal()">
                             <i class="fas fa-plus me-1"></i> Thêm phòng ban
                         </button>
                     </div>
@@ -299,7 +289,7 @@
                                     <th>Quản lý</th>
                                     <th>Số nhân viên</th>
                                     <th>Mô tả</th>
-                                    <th class="text-center">Thao tác</th>
+                                    <th class="text-center admin-only">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="department-tbody"></tbody>
@@ -315,7 +305,7 @@
                         <div class="table-card-title">
                             <i class="fas fa-briefcase text-primary me-2"></i>Quản lý chức vụ
                         </div>
-                        <button class="btn btn-sm btn-indigo" onclick="openPosModal()">
+                        <button class="btn btn-sm btn-indigo admin-only" onclick="openPosModal()">
                             <i class="fas fa-plus me-1"></i> Thêm chức vụ
                         </button>
                     </div>
@@ -326,7 +316,7 @@
                                     <th class="ps-3" style="width: 50px;">STT</th>
                                     <th>Chức vụ</th>
                                     <th>Lương cơ bản</th>
-                                    <th class="text-center" style="width: 100px;">Thao tác</th>
+                                    <th class="text-center admin-only" style="width: 100px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="position-tbody"></tbody>
@@ -390,32 +380,99 @@
                     </div>
                 </div>
 
-                <!-- Bảng lịch sử chấm công -->
+                <!-- Lịch sử chấm công (Giao diện Lịch) -->
                 <div class="table-card">
                     <div class="table-card-header">
                         <div class="table-card-title">
-                            <i class="fas fa-list-check text-primary me-2"></i>Lịch sử chấm công
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>Lịch chấm công chi tiết
                         </div>
-                        <!-- Lọc theo tháng -->
-                        <input type="month" class="form-control form-control-sm" style="width:160px" value="2026-04"
-                            id="att-month">
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="month" class="form-control form-control-sm" style="width:160px" id="att-month-calendar">
+                            <button class="btn btn-sm btn-indigo admin-only" onclick="toggleAttView()" id="btn-toggle-att">
+                                <i class="fas fa-table me-1"></i> Xem dạng bảng
+                            </button>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-3">Nhân viên</th>
-                                    <th>Ngày</th>
-                                    <th>Giờ vào</th>
-                                    <th>Giờ ra</th>
-                                    <th>Số giờ làm</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody id="attendance-tbody"></tbody>
-                        </table>
+                    
+                    <!-- Thống kê tháng -->
+                    <div class="row g-0 border-bottom">
+                        <div class="col-md-3 p-3 border-end text-center">
+                            <div class="text-muted small">Số ngày đi làm</div>
+                            <div class="fs-5 fw-bold text-success" id="stat-att-total">0</div>
+                        </div>
+                        <div class="col-md-3 p-3 border-end text-center">
+                            <div class="text-muted small">Đi muộn</div>
+                            <div class="fs-5 fw-bold text-warning" id="stat-att-late">0</div>
+                        </div>
+                        <div class="col-md-3 p-3 border-end text-center">
+                            <div class="text-muted small">Về sớm</div>
+                            <div class="fs-5 fw-bold text-danger" id="stat-att-early">0</div>
+                        </div>
+                        <div class="col-md-3 p-3 text-center">
+                            <div class="text-muted small">Giờ làm TB</div>
+                            <div class="fs-5 fw-bold text-primary" id="stat-att-avg">0h</div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Container -->
+                    <div class="p-3">
+                        <div id="attendance-calendar-container" class="attendance-calendar">
+                            <!-- JS sẽ render lịch ở đây -->
+                        </div>
+                        
+                        <!-- Table View (Ẩn mặc định, chỉ Admin cần dùng để quản lý tổng) -->
+                        <div id="attendance-table-container" style="display:none">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Nhân viên</th>
+                                            <th>Ngày</th>
+                                            <th>Giờ vào</th>
+                                            <th>Giờ ra</th>
+                                            <th>Số giờ làm</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendance-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <style>
+                    .attendance-calendar {
+                        display: grid;
+                        grid-template-columns: repeat(7, 1fr);
+                        gap: 8px;
+                    }
+                    .calendar-day-header {
+                        text-align: center;
+                        font-weight: bold;
+                        font-size: 12px;
+                        padding: 8px;
+                        color: #64748b;
+                        background: #f8fafc;
+                        border-radius: 4px;
+                    }
+                    .calendar-day {
+                        min-height: 80px;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 6px;
+                        padding: 6px;
+                        background: #fff;
+                        position: relative;
+                    }
+                    .calendar-day.empty { background: #f1f5f9; border: none; }
+                    .calendar-day.today { border: 2px solid #6366f1; }
+                    .calendar-day .day-num { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+                    .calendar-day .att-info { font-size: 10px; line-height: 1.2; }
+                    .calendar-day .time-in { color: #059669; font-weight: 500; }
+                    .calendar-day .time-out { color: #0891b2; font-weight: 500; }
+                    .calendar-day .badge-late { color: #d97706; background: #fffbeb; padding: 1px 3px; border-radius: 2px; }
+                    .calendar-day .badge-early { color: #dc2626; background: #fef2f2; padding: 1px 3px; border-radius: 2px; }
+                </style>
             </div><!-- /section-attendance -->
 
             <!-- ============== SECTION: NGHỈ PHÉP ============== -->
@@ -440,7 +497,7 @@
                                     <th>Số ngày</th>
                                     <th>Lý do</th>
                                     <th>Trạng thái</th>
-                                    <th class="text-center">Thao tác</th>
+                                    <th class="text-center admin-only">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="leave-tbody"></tbody>
@@ -459,13 +516,13 @@
                         <div class="d-flex gap-2 align-items-center">
                             <input type="month" class="form-control form-control-sm" style="width:160px" value="2026-04"
                                 id="payroll-month">
-                            <button class="btn btn-sm btn-indigo" onclick="calculatePayroll()">
+                            <button class="btn btn-sm btn-indigo admin-only" onclick="calculatePayroll()">
                                 <i class="fas fa-calculator me-1"></i> Tính lương
                             </button>
                         </div>
                     </div>
-                    <!-- Tổng hợp lương -->
-                    <div class="row g-0 border-bottom">
+                    <!-- Tổng hợp lương (Chỉ Admin thấy) -->
+                    <div class="row g-0 border-bottom admin-only">
                         <div class="col-md-4 p-3 border-end text-center">
                             <div class="text-muted small">Tổng lương phải trả</div>
                             <div class="fs-4 fw-bold text-primary" id="total-salary">1.245.000.000 ₫</div>
@@ -713,6 +770,44 @@
                 <div class="modal-footer border-0 pt-0">
                     <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
                     <button class="btn btn-danger btn-sm" id="confirm-ok">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: Đăng thông báo -->
+    <div class="modal fade" id="notification-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Đăng thông báo mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tiêu đề <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="notif-title" placeholder="VD: Lịch nghỉ lễ 2/9">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Loại thông báo</label>
+                        <select class="form-select" id="notif-type">
+                            <option value="info">Thông tin (Xanh dương)</option>
+                            <option value="success">Thành công (Xanh lá)</option>
+                            <option value="warning">Cảnh báo (Vàng)</option>
+                            <option value="danger">Quan trọng (Đỏ)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Nội dung <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="notif-content" rows="4" placeholder="Nhập nội dung thông báo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-indigo" onclick="saveNotification()">
+                        <i class="fas fa-paper-plane me-1"></i> Đăng tin
+                    </button>
                 </div>
             </div>
         </div>

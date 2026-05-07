@@ -21,4 +21,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     // Đếm số ngày chấm công hợp lệ trong khoảng thời gian
     // Lấy danh sách chấm công trong khoảng thời gian
     java.util.List<Attendance> findByEmployeeIdAndDateBetween(Long employeeId, LocalDate start, LocalDate end);
+
+    long countByDateAndStatus(LocalDate date, AttendanceStatus status);
 }

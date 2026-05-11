@@ -9,5 +9,5 @@ public interface PayrollService {
     List<PayrollResponse> calculatePayroll(int month, int year);
 
     // Lấy bảng lương đã tính
-    List<PayrollResponse> getPayrolls(int month, int year);
+    PageResponse<PayrollResponse> getPayrolls(int month, int year, int page, int size, String email, boolean isAdmin);
 }

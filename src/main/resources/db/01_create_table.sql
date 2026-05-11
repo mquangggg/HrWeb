@@ -45,10 +45,11 @@ CREATE TABLE leave_requests (
     employee_id BIGINT,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    reason TEXT NOT NULL,
+    reason TEXT,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     approved_by BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reason_category VARCHAR(50),
     CONSTRAINT fk_leave_emp FOREIGN KEY (employee_id) REFERENCES employees(id),
     CONSTRAINT fk_leave_approver FOREIGN KEY (approved_by) REFERENCES employees(id)
 );
@@ -65,6 +66,15 @@ CREATE TABLE payrolls (
     deduction DECIMAL(15,2) DEFAULT 0,
     net_salary DECIMAL(15,2),
     CONSTRAINT fk_pay_emp FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
+CREATE TABLE notifications(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content TEXT,
+    published_by VARCHAR(255),
+    published_date DATETIME(6),
+    title VARCHAR(255),
+    type VARCHAR(255)
 );
 
 

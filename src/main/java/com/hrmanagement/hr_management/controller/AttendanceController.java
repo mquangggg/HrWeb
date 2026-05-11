@@ -62,8 +62,23 @@ public class AttendanceController {
     @GetMapping
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'EMPLOYEE')")
     public ResponseEntity<PageResponse<AttendanceResponse>> getAllAttendances(
+            Principal principal,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(attendanceService.getAllAttendances(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            org.springframework.security.core.Authentication authentication) {
+            
+        boolean isAdmin = authentication.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
+        String email = principal.getName();
+        return ResponseEntity.ok(attendanceService.getAllAttendances(page, size, email, isAdmin));
+    }
+
+    // Lấy thống kê hôm nay
+    @GetMapping("/today-stats")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN', 'EMPLOYEE')")
+    public ResponseEntity<com.hrmanagement.hr_management.dto.response.AttendanceStatsResponse> getTodayStats(
+            Principal principal,
+            org.springframework.security.core.Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
+        return ResponseEntity.ok(attendanceService.getTodayStats(principal.getName(), isAdmin));
     }
 }

@@ -46,9 +46,11 @@ public class PayrollController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
-    public ResponseEntity<ApiResponse<List<PayrollResponse>>> getPayrolls(
+    public ResponseEntity<ApiResponse<PageResponse<PayrollResponse>>> getPayrolls(
             @RequestParam int month,
             @RequestParam int year,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         
         if (month < 1 || month > 12) {
@@ -58,19 +60,12 @@ public class PayrollController {
             throw new RuntimeException("Năm không hợp lệ");
         }
         
-        List<PayrollResponse> results = payrollService.getPayrolls(month, year);
-        
-        // Lọc dữ liệu nếu không phải là ADMIN
         boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        String email = authentication.getName();
         
-        if (!isAdmin) {
-            String currentEmail = authentication.getName();
-            results = results.stream()
-                    .filter(p -> p.getEmail().equals(currentEmail))
-                    .collect(Collectors.toList());
-        }
+        PageResponse<PayrollResponse> results = payrollService.getPayrolls(month, year, page, size, email, isAdmin);
         
-        return ResponseEntity.ok(ApiResponse.<List<PayrollResponse>>builder()
+        return ResponseEntity.ok(ApiResponse.<PageResponse<PayrollResponse>>builder()
                 .message(isAdmin ? "Lấy danh sách bảng lương tháng " + month + "/" + year 
                                  : "Lấy thông tin lương cá nhân tháng " + month + "/" + year)
                 .data(results)

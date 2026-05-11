@@ -63,6 +63,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         leaveRequest.setEmployee(employee);
         leaveRequest.setStartDate(request.getStartDate());
         leaveRequest.setEndDate(request.getEndDate());
+        leaveRequest.setReasonCategory(request.getReasonCategory());
         leaveRequest.setReason(request.getReason());
         leaveRequest.setStatus(LeaveStatus.pending);
 
@@ -101,6 +102,11 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
             throw new RuntimeException("Đơn này đã được xử lý (không còn ở trạng thái pending)!");
         }
 
+        // Không cho phép tự duyệt đơn của chính mình
+        if (approver.getId().equals(leaveRequest.getEmployee().getId())) {
+            throw new RuntimeException("Bạn không thể tự duyệt đơn nghỉ phép của chính mình!");
+        }
+
         // --- Kiểm tra quyền duyệt ---
         String role = approver.getRole().name();
         if (role.equals("ADMIN")) {
@@ -129,10 +135,12 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         
         return LeaveResponse.builder()
                 .id(entity.getId())
+                .employeeId(entity.getEmployee().getId())
                 .fullName(entity.getEmployee().getFirstName() + " " + entity.getEmployee().getLastName())
                 .status(entity.getStatus().name())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
+                .reasonCategory(entity.getReasonCategory())
                 .reason(entity.getReason())
                 .days((int) daysBetween)
                 .approverByName(entity.getApprovedBy() != null ? 

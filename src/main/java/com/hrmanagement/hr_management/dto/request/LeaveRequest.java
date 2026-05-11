@@ -15,6 +15,9 @@ public class LeaveRequest {
     @NotNull(message = "Ngày kết thúc không được để trống")
     private LocalDate endDate;
     
-    @NotBlank(message = "Lý do không được để trống")
+    @NotBlank(message = "Danh mục lý do không được để trống")
+    private String reasonCategory;
+
+    // Phần chi tiết có thể bỏ trống
     private String reason;
 }

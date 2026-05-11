@@ -112,24 +112,38 @@ function loadUserInfo() {
             localStorage.setItem('user', JSON.stringify(user));
             renderUserToDOM(user);
             applyRolePermissions(user.role);
-            fetchNotifications(); 
-            if (user.role === 'ADMIN') {
-                fetchDashboardStats();
-            }
-            initAttendanceCalendar(); // Khởi tạo lịch chấm công
+            
+            // CHỈ bắt đầu load dữ liệu khi đã xác thực user thành công
+            fetchInitialData(user);
         },
         error: function(xhr) {
-            console.error('Không thể lấy thông tin user, dùng dữ liệu cũ');
-            const userStr = localStorage.getItem('user');
-            if (userStr) {
-                const user = JSON.parse(userStr);
-                renderUserToDOM(user);
-                applyRolePermissions(user.role);
+            if (xhr.status === 401) {
+                console.warn('Phiên làm việc hết hạn.');
+                handleLogout(false); // Đăng xuất im lặng nếu token hết hạn
             } else {
-                handleLogout();
+                console.error('Không thể kết nối server, dùng dữ liệu cũ nếu có');
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    renderUserToDOM(user);
+                    applyRolePermissions(user.role);
+                }
             }
         }
     });
+}
+
+// Hàm tập hợp các lệnh load dữ liệu ban đầu để tránh bị rối và tối ưu tốc độ
+function fetchInitialData(user) {
+    fetchNotifications(); 
+    if (user.role === 'ADMIN') {
+        fetchDashboardStats();
+    }
+    initAttendanceCalendar(); // Khởi tạo lịch chấm công
+    fetchEmployees(0);
+    fetchDepartments();
+    fetchPositions();
+    fetchLeaveRequests(0);
 }
 
 function applyRolePermissions(role) {
@@ -143,8 +157,13 @@ function applyRolePermissions(role) {
         // Chỉ ẩn các nút hành động quản trị (Thêm, Sửa, Xóa, Tính lương, Duyệt)
         $('.admin-only').hide();
     } else if (role === 'MANAGER') {
-        // Manager có thể thấy tất cả nhưng ta có thể giới hạn một số nút của ADMIN nếu muốn
-        // Hiện tại MANAGER và ADMIN dùng chung admin-only
+        // Manager có thể duyệt phép và quản lý nhân viên cấp dưới,
+        // NHƯNG không có quyền xem/tính lương tổng, không chỉnh sửa phòng ban/chức vụ.
+        $('#section-dashboard .admin-only').hide(); // Thống kê, thông báo
+        $('#section-department .admin-only').hide();
+        $('#section-position .admin-only').hide();
+        $('#section-payroll .admin-only').hide(); // Tính lương, Tổng hợp lương
+        $('#section-employee .btn-indigo.admin-only').hide(); // Nút Thêm nhân viên
     }
 }
 
@@ -183,8 +202,8 @@ loadUserInfo();
 // ===================================================
 //  ĐĂNG XUẤT
 // ===================================================
-function handleLogout() {
-    if (!confirm('Bạn có chắc muốn đăng xuất không?')) return;
+function handleLogout(confirmNeeded = true) {
+    if (confirmNeeded && !confirm('Bạn có chắc muốn đăng xuất không?')) return;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/pages/login.html';
@@ -249,6 +268,7 @@ function fetchDashboardStats() {
             $('#stat-payroll-label').text(`Lương tháng ${month < 10 ? '0' + month : month}`);
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi lấy thống kê dashboard:', xhr);
         }
     });
@@ -275,6 +295,7 @@ function fetchNotifications() {
             renderNotifications(res.data);
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi lấy thông báo:', xhr);
         }
     });
@@ -398,6 +419,7 @@ function fetchEmployees(page) {
             renderEmpPagination();
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi lấy danh sách nhân viên:', xhr);
         }
     });
@@ -432,7 +454,8 @@ function renderEmployees() {
             <td>${roleBadge(emp.role)}</td>
             <td style="font-size:13px">${role === 'ADMIN' ? formatVND(emp.baseSalary || 0) : '***'}</td>
             <td>${statusBadge(emp.status)}</td>
-            <td class="text-center">
+            ${role !== 'EMPLOYEE' ? `
+            <td class="text-center admin-only">
                 ${(role === 'ADMIN' || (role === 'MANAGER' && emp.departmentId === user.departmentId)) ? `
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openEmpModal(${emp.id})">
                     <i class="fas fa-pen"></i>
@@ -441,7 +464,7 @@ function renderEmployees() {
                     <i class="fas fa-trash"></i>
                 </button>
                 ` : '—'}
-            </td>
+            </td>` : ''}
         </tr>`;
     });
     $('#employee-tbody').html(html || '<tr><td colspan="9" class="text-center text-muted py-4">Không có dữ liệu</td></tr>');
@@ -504,7 +527,7 @@ function filterEmployees() {
     fetchEmployees(0);
 }
 
-fetchEmployees();
+// fetchEmployees(); // Đã chuyển vào fetchInitialData
 
 // ===================================================
 //  NHÂN VIÊN – Mở modal thêm / sửa
@@ -643,6 +666,7 @@ function fetchDepartments() {
             renderDepartments();
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi lấy danh sách phòng ban:', xhr);
         }
     });
@@ -681,7 +705,7 @@ function renderDepartments() {
     const options = departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
     $('#emp-dept').html('<option value="">-- Chọn phòng ban --</option>' + options);
 }
-fetchDepartments();
+// fetchDepartments(); // Đã chuyển vào fetchInitialData
 
 // Mở modal phòng ban
 function openDeptModal(id) {
@@ -747,6 +771,7 @@ function fetchPositions() {
             renderPositions();
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi lấy danh sách chức vụ:', xhr);
         }
     });
@@ -783,7 +808,7 @@ function renderPositions() {
     const options = positions.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     $('#emp-position').html('<option value="">-- Chọn chức vụ --</option>' + options);
 }
-fetchPositions();
+// fetchPositions(); // Đã chuyển vào fetchInitialData
 
 function openPosModal(id) {
     $('#pos-id').val(''); 
@@ -884,6 +909,9 @@ function fetchAttendances() {
     // Các trường hợp còn lại lấy theo tháng của cá nhân.
     const isAdmin = user.role === 'ADMIN' || user.role === 'MANAGER';
     
+    // Luôn tải thống kê hôm nay khi vào mục chấm công
+    fetchTodayAttendanceStats();
+
     if (currentAttView === 'calendar' || !isAdmin) {
         $.ajax({
             url: `/api/v1/attendances/calendar?month=${parseInt(month)}&year=${year}`,
@@ -901,9 +929,38 @@ function fetchAttendances() {
             headers: { 'Authorization': 'Bearer ' + token },
             success: function(res) {
                 renderAttendanceTable(res.data);
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) handleLogout(false);
+                console.error('Lỗi lấy danh sách chấm công:', xhr);
             }
         });
     }
+}
+
+// ===================================================
+//  CHẤM CÔNG – Thống kê hôm nay
+// ===================================================
+function fetchTodayAttendanceStats() {
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/attendances/today-stats',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(res) {
+            $('#today-present').text(res.present);
+            $('#progress-present').css('width', res.presentPercentage + '%');
+            
+            $('#today-late').text(res.late);
+            $('#progress-late').css('width', res.latePercentage + '%');
+            
+            $('#today-absent').text(res.absent);
+            $('#progress-absent').css('width', res.absentPercentage + '%');
+        },
+        error: function(xhr) {
+            console.error('Lỗi khi tải thống kê chấm công hôm nay:', xhr);
+        }
+    });
 }
 
 function renderAttendanceCalendar(list, month, year) {
@@ -999,6 +1056,7 @@ function doCheckIn() {
             fetchAttendances(); // Reload lịch sử
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             alert(xhr.responseJSON?.message || 'Có lỗi xảy ra khi Check-in');
         }
     });
@@ -1017,6 +1075,7 @@ function doCheckOut() {
             fetchAttendances(); // Reload lịch sử
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             alert(xhr.responseJSON?.message || 'Có lỗi xảy ra khi Check-out');
         }
     });
@@ -1043,12 +1102,16 @@ function fetchLeaveRequests(page = 0) {
             renderLeaveRequests(res.data, user);
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi khi tải lịch sử nghỉ phép:', xhr);
         }
     });
 }
 
+let currentLeaveList = [];
+
 function renderLeaveRequests(list, user) {
+    currentLeaveList = list;
     const role = user?.role || 'EMPLOYEE';
     const myDeptId = user?.departmentId || null;
     
@@ -1058,8 +1121,9 @@ function renderLeaveRequests(list, user) {
         if (leave.status === 'pending') pending++;
         
         // Logic hiển thị nút duyệt: ADMIN thấy hết, MANAGER thấy đơn cùng phòng ban
+        // Không thể tự duyệt đơn của chính mình
         let canApprove = false;
-        if (leave.status === 'pending') {
+        if (leave.status === 'pending' && leave.employeeId !== user?.id) {
             if (role === 'ADMIN') {
                 canApprove = true;
             } else if (role === 'MANAGER' && leave.departmentId === myDeptId) {
@@ -1067,21 +1131,24 @@ function renderLeaveRequests(list, user) {
             }
         }
 
-        html += `<tr>
+        html += `<tr style="cursor: pointer;" onclick="showLeaveDetail(${leave.id})">
             <td class="ps-3 text-muted">${i + 1 + (leavePagination.page * leavePagination.size)}</td>
             <td class="fw-medium">${leave.fullName || '—'}</td>
             <td style="font-size:13px">${leave.startDate}</td>
             <td style="font-size:13px">${leave.endDate}</td>
             <td><span class="badge bg-light text-dark border">${leave.days} ngày</span></td>
-            <td class="text-muted" style="font-size:13px">${leave.reason}</td>
+            <td class="text-muted" style="font-size:13px">
+                <div class="fw-bold text-dark">${leave.reasonCategory || '—'}</div>
+                ${leave.reason ? `<div class="text-truncate" style="max-width: 150px;" title="${leave.reason}">${leave.reason}</div>` : ''}
+            </td>
             <td>${statusBadge(leave.status)}</td>
             ${role !== 'EMPLOYEE' ? `
             <td class="text-center admin-only">
                 ${canApprove ? `
-                <button class="btn btn-sm btn-success me-1" onclick="updateLeaveStatus(${leave.id}, 'approved')">
+                <button class="btn btn-sm btn-success me-1" onclick="event.stopPropagation(); updateLeaveStatus(${leave.id}, 'approved')">
                     <i class="fas fa-check"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="updateLeaveStatus(${leave.id}, 'rejected')">
+                <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); updateLeaveStatus(${leave.id}, 'rejected')">
                     <i class="fas fa-times"></i>
                 </button>` : (leave.approverByName ? `<span class="small text-muted">Duyệt: ${leave.approverByName}</span>` : '—')}
             </td>` : ''}
@@ -1094,13 +1161,13 @@ function renderLeaveRequests(list, user) {
         $('#leave-badge').text(pending).toggle(pending > 0);
     }
 }
-// Gọi lần đầu khi load
-fetchLeaveRequests();
+// Gọi lần đầu khi load - Đã chuyển vào fetchInitialData
+// fetchLeaveRequests();
 
 // Mở modal tạo đơn – Ẩn dropdown nhân viên
 function openLeaveModal() {
     $('#leave-employee').closest('.mb-3').addClass('d-none'); // Ẩn vì Backend tự nhận dạng qua Token
-    $('#leave-from, #leave-to, #leave-reason').val('');
+    $('#leave-from, #leave-to, #leave-reason, #leave-reason-category').val('');
     new bootstrap.Modal($('#leave-modal')[0]).show();
 }
 
@@ -1108,9 +1175,10 @@ function openLeaveModal() {
 function saveLeave() {
     const from = $('#leave-from').val();
     const to   = $('#leave-to').val();
+    const category = $('#leave-reason-category').val();
     const reason = $('#leave-reason').val().trim();
-    if (!from || !to || !reason) {
-        alert('Vui lòng điền đầy đủ thông tin ngày và lý do!');
+    if (!from || !to || !category) {
+        alert('Vui lòng điền ngày và chọn Lý do chính!');
         return;
     }
     
@@ -1123,6 +1191,7 @@ function saveLeave() {
         data: JSON.stringify({
             startDate: from,
             endDate: to,
+            reasonCategory: category,
             reason: reason
         }),
         success: function() {
@@ -1131,6 +1200,7 @@ function saveLeave() {
             bootstrap.Modal.getInstance($('#leave-modal')[0]).hide();
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             alert(xhr.responseJSON?.message || 'Có lỗi xảy ra khi tạo đơn nghỉ phép');
         }
     });
@@ -1153,10 +1223,33 @@ function updateLeaveStatus(id, status) {
     });
 }
 
+function showLeaveDetail(id) {
+    const leave = currentLeaveList.find(l => l.id === id);
+    if (!leave) return;
+
+    $('#detail-leave-employee').text(leave.fullName || '—');
+    $('#detail-leave-time').text(`${leave.startDate} đến ${leave.endDate}`);
+    $('#detail-leave-days').text(leave.days);
+    $('#detail-leave-category').text(leave.reasonCategory || '—');
+    $('#detail-leave-reason').text(leave.reason || '—');
+    
+    let statusText = 'Đang chờ';
+    if (leave.status === 'approved') statusText = '<span class="text-success">Đã duyệt</span>';
+    if (leave.status === 'rejected') statusText = '<span class="text-danger">Từ chối</span>';
+    $('#detail-leave-status').html(statusText);
+    
+    $('#detail-leave-approver').text(leave.approverByName || '—');
+
+    new bootstrap.Modal($('#leave-detail-modal')[0]).show();
+}
+
 // ===================================================
 //  BẢNG LƯƠNG – Render
 // ===================================================
-function fetchPayrolls() {
+let payrollPagination = { page: 0, size: 10, totalPages: 0 };
+
+function fetchPayrolls(page = 0) {
+    payrollPagination.page = page;
     const monthVal = $('#payroll-month').val(); // "YYYY-MM"
     if (!monthVal) return;
 
@@ -1164,14 +1257,17 @@ function fetchPayrolls() {
     const token = localStorage.getItem('token');
 
     $.ajax({
-        url: `/api/v1/payrolls?month=${parseInt(month)}&year=${year}`,
+        url: `/api/v1/payrolls?month=${parseInt(month)}&year=${year}&page=${page}&size=${payrollPagination.size}`,
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token },
         success: function(res) {
-            renderPayroll(res.data);
-            updatePayrollStats(res.data);
+            payrollPagination.totalPages = res.data.totalPages;
+            renderPayroll(res.data.data);
+            updatePayrollStats(res.data.data);
+            renderPayrollPagination();
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             console.error('Lỗi khi tải bảng lương:', xhr);
         }
     });
@@ -1220,6 +1316,24 @@ function updatePayrollStats(list) {
     $('#avg-salary').text(formatVND(avg));
 }
 
+function renderPayrollPagination() {
+    const total = payrollPagination.totalPages;
+    const cur   = payrollPagination.page;
+    if (total <= 1) { $('#payroll-pagination').html(''); return; }
+
+    let html = `<nav><ul class="pagination pagination-sm mb-0">`;
+    html += `<li class="page-item ${cur === 0 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="fetchPayrolls(${cur - 1}); return false;">«</a></li>`;
+    for (let i = 0; i < total; i++) {
+        html += `<li class="page-item ${i === cur ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="fetchPayrolls(${i}); return false;">${i + 1}</a></li>`;
+    }
+    html += `<li class="page-item ${cur === total - 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="fetchPayrolls(${cur + 1}); return false;">»</a></li>`;
+    html += `</ul></nav>`;
+    $('#payroll-pagination').html(html);
+}
+
 // Tính lương
 function calculatePayroll() {
     const monthVal = $('#payroll-month').val();
@@ -1239,6 +1353,7 @@ function calculatePayroll() {
             fetchPayrolls(); // Reload lại bảng
         },
         error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
             alert(xhr.responseJSON?.message || 'Có lỗi xảy ra khi tính lương');
         }
     });

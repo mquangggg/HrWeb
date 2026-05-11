@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hrmanagement.hr_management.dto.response.AttendanceResponse;
+import com.hrmanagement.hr_management.dto.response.AttendanceStatsResponse;
 import com.hrmanagement.hr_management.dto.response.PageResponse;
 import com.hrmanagement.hr_management.entity.Attendance;
 import com.hrmanagement.hr_management.entity.Employee;
@@ -103,9 +104,22 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public PageResponse<AttendanceResponse> getAllAttendances(int page, int size) {
+    public PageResponse<AttendanceResponse> getAllAttendances(int page, int size, String email, boolean isAdmin) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
-        Page<Attendance> pageData = attendanceRepository.findAll(pageable);
+        Page<Attendance> pageData;
+        
+        if (isAdmin) {
+            pageData = attendanceRepository.findAll(pageable);
+        } else {
+            Employee emp = employeeRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
+                    
+            if (emp.getDepartment() != null) {
+                pageData = attendanceRepository.findByEmployeeDepartmentId(emp.getDepartment().getId(), pageable);
+            } else {
+                pageData = attendanceRepository.findByEmployeeId(emp.getId(), pageable);
+            }
+        }
 
         return mapToPageResponse(pageData);
     }
@@ -153,6 +167,53 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
                 .totalPages(pageData.getTotalPages())
+                .build();
+    }
+
+    @Override
+    public AttendanceStatsResponse getTodayStats(String email, boolean isAdmin) {
+        LocalDate today = LocalDate.now();
+        long presentCount = 0;
+        long lateCount = 0;
+        long totalEmployees = 0;
+
+        if (isAdmin) {
+            presentCount = attendanceRepository.countByDateAndStatus(today, AttendanceStatus.present);
+            lateCount = attendanceRepository.countByDateAndStatus(today, AttendanceStatus.late);
+            totalEmployees = employeeRepository.count();
+        } else {
+            Employee emp = employeeRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
+                    
+            if (emp.getDepartment() != null) {
+                Long deptId = emp.getDepartment().getId();
+                presentCount = attendanceRepository.countByDateAndStatusAndEmployeeDepartmentId(today, AttendanceStatus.present, deptId);
+                lateCount = attendanceRepository.countByDateAndStatusAndEmployeeDepartmentId(today, AttendanceStatus.late, deptId);
+                totalEmployees = employeeRepository.countByDepartmentId(deptId);
+            } else {
+                totalEmployees = 1;
+                java.util.Optional<Attendance> att = attendanceRepository.findByEmployeeIdAndDate(emp.getId(), today);
+                if (att.isPresent()) {
+                    if (att.get().getStatus() == AttendanceStatus.present) presentCount = 1;
+                    if (att.get().getStatus() == AttendanceStatus.late) lateCount = 1;
+                }
+            }
+        }
+
+        long absentCount = totalEmployees - presentCount - lateCount;
+        if (absentCount < 0) absentCount = 0;
+
+        int presentPct = totalEmployees > 0 ? (int) Math.round((presentCount * 100.0) / totalEmployees) : 0;
+        int latePct = totalEmployees > 0 ? (int) Math.round((lateCount * 100.0) / totalEmployees) : 0;
+        int absentPct = totalEmployees > 0 ? (int) Math.round((absentCount * 100.0) / totalEmployees) : 0;
+
+        return AttendanceStatsResponse.builder()
+                .present(presentCount)
+                .late(lateCount)
+                .absent(absentCount)
+                .presentPercentage(presentPct)
+                .latePercentage(latePct)
+                .absentPercentage(absentPct)
                 .build();
     }
 }

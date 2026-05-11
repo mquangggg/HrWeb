@@ -30,7 +30,10 @@ public class LeaveRequest {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "reason_category")
+    private String reasonCategory;
+
+    @Column(columnDefinition = "TEXT")
     private String reason;
 
     @Enumerated(EnumType.STRING)

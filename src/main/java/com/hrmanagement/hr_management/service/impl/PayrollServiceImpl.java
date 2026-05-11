@@ -5,24 +5,23 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
 
 import com.hrmanagement.hr_management.dto.response.PageResponse;
 import com.hrmanagement.hr_management.dto.response.PayrollResponse;
 import com.hrmanagement.hr_management.entity.Attendance;
 import com.hrmanagement.hr_management.entity.Employee;
 import com.hrmanagement.hr_management.entity.Payroll;
-import com.hrmanagement.hr_management.enums.AttendanceStatus;
-import com.hrmanagement.hr_management.enums.EmployeeStatus;
+
 import com.hrmanagement.hr_management.repository.AttendanceRepository;
 import com.hrmanagement.hr_management.repository.EmployeeRepository;
 import com.hrmanagement.hr_management.repository.PayrollRepository;
@@ -93,9 +92,9 @@ public class PayrollServiceImpl implements PayrollService {
                     .add(allowance)
                     .setScale(2, RoundingMode.HALF_UP);
 
-            // Chỉ lưu bảng lương nếu netSalary > 0 (Tránh tạo rác cho nhân viên không làm ngày nào)
+
             if (netSalary.compareTo(BigDecimal.ZERO) <= 0) {
-                continue;
+                netSalary = BigDecimal.ZERO;
             }
 
             // Lưu payroll
@@ -119,10 +118,39 @@ public class PayrollServiceImpl implements PayrollService {
     }
 
     @Override
-    public List<PayrollResponse> getPayrolls(int month, int year) {
-        return payrollRepository.findByMonthAndYear(month, year).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public PageResponse<PayrollResponse> getPayrolls(int month, int year, int page, int size, String email, boolean isAdmin) {
+        if (isAdmin) {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Payroll> payrollPage = payrollRepository.findByMonthAndYear(month, year, pageable);
+            
+            List<PayrollResponse> content = payrollPage.getContent().stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+                    
+            return PageResponse.<PayrollResponse>builder()
+                    .data(content)
+                    .currentPage(page)
+                    .pageSize(size)
+                    .totalElements(payrollPage.getTotalElements())
+                    .totalPages(payrollPage.getTotalPages())
+                    .build();
+        } else {
+            Employee emp = employeeRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
+            
+            Optional<Payroll> payrollOpt = payrollRepository.findByEmployeeIdAndMonthAndYear(emp.getId(), month, year);
+            
+            List<PayrollResponse> content = new ArrayList<>();
+            payrollOpt.ifPresent(p -> content.add(mapToResponse(p)));
+            
+            return PageResponse.<PayrollResponse>builder()
+                    .data(content)
+                    .currentPage(0)
+                    .pageSize(size)
+                    .totalElements(content.size())
+                    .totalPages(content.isEmpty() ? 0 : 1)
+                    .build();
+        }
     }
 
     private PayrollResponse mapToResponse(Payroll payroll) {

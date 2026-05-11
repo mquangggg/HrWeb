@@ -50,4 +50,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     // Get employees by manager
     Set<Employee> findByManager(Employee manager);
+
+    // Count employees by department
+    long countByDepartmentId(Long departmentId);
 }

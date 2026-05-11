@@ -353,27 +353,27 @@
                                 <span class="text-muted small">Đúng giờ</span>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress" style="width:100px;height:6px">
-                                        <div class="progress-bar bg-success" style="width:75%"></div>
+                                        <div class="progress-bar bg-success" id="progress-present" style="width:0%"></div>
                                     </div>
-                                    <strong class="text-success small">96</strong>
+                                    <strong class="text-success small" id="today-present">0</strong>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Đi muộn</span>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress" style="width:100px;height:6px">
-                                        <div class="progress-bar bg-warning" style="width:25%"></div>
+                                        <div class="progress-bar bg-warning" id="progress-late" style="width:0%"></div>
                                     </div>
-                                    <strong class="text-warning small">32</strong>
+                                    <strong class="text-warning small" id="today-late">0</strong>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Vắng mặt</span>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress" style="width:100px;height:6px">
-                                        <div class="progress-bar bg-danger" style="width:11%"></div>
+                                        <div class="progress-bar bg-danger" id="progress-absent" style="width:0%"></div>
                                     </div>
-                                    <strong class="text-danger small">14</strong>
+                                    <strong class="text-danger small" id="today-absent">0</strong>
                                 </div>
                             </div>
                         </div>
@@ -553,6 +553,8 @@
                             <tbody id="payroll-tbody"></tbody>
                         </table>
                     </div>
+                    <!-- Phân trang -->
+                    <div class="d-flex justify-content-center py-2" id="payroll-pagination"></div>
                 </div>
             </div><!-- /section-payroll -->
 
@@ -741,9 +743,20 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Lý do <span class="text-danger">*</span></label>
+                        <label class="form-label fw-medium">Lý do chính <span class="text-danger">*</span></label>
+                        <select class="form-select" id="leave-reason-category">
+                            <option value="">-- Chọn lý do --</option>
+                            <option value="Ốm đau">Ốm đau</option>
+                            <option value="Có việc gia đình">Có việc gia đình</option>
+                            <option value="Du lịch / Nghỉ mát">Du lịch / Nghỉ mát</option>
+                            <option value="Khám thai / Sinh con">Khám thai / Sinh con</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Chi tiết lý do (Nội dung bổ sung) <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="leave-reason" rows="3"
-                            placeholder="Nhập lý do xin nghỉ..."></textarea>
+                            placeholder="Nhập chi tiết lý do xin nghỉ..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -751,6 +764,31 @@
                     <button class="btn btn-indigo" onclick="saveLeave()">
                         <i class="fas fa-paper-plane me-1"></i> Gửi đơn
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Chi tiết đơn nghỉ phép -->
+    <div class="modal fade" id="leave-detail-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chi tiết đơn xin nghỉ phép</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><strong>Nhân viên: </strong> <span id="detail-leave-employee"></span></div>
+                    <div class="mb-2"><strong>Thời gian: </strong> <span id="detail-leave-time"></span></div>
+                    <div class="mb-2"><strong>Số ngày: </strong> <span id="detail-leave-days"></span> ngày</div>
+                    <div class="mb-2"><strong>Lý do chính: </strong> <span id="detail-leave-category"></span></div>
+                    <div class="mb-2"><strong>Chi tiết bổ sung: </strong></div>
+                    <div class="p-2 border rounded bg-light mb-3" style="min-height: 80px;" id="detail-leave-reason"></div>
+                    <div class="mb-2"><strong>Trạng thái: </strong> <span id="detail-leave-status"></span></div>
+                    <div class="mb-2"><strong>Người duyệt: </strong> <span id="detail-leave-approver"></span></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
         </div>

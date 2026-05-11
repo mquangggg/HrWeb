@@ -13,10 +13,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LeaveResponse {
     private Long id;
+    private Long employeeId;
     private String fullName;
     private String status;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String reasonCategory;
     private String reason;
     private Integer days;
     private String note;

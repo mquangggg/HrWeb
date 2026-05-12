@@ -76,7 +76,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         Employee employee = employeeRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
         Page<com.hrmanagement.hr_management.entity.LeaveRequest> pageData = leaveRequestRepository.findByEmployeeId(employee.getId(), pageable);
 
         return mapToPageResponse(pageData);
@@ -84,7 +84,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
     @Override
     public PageResponse<LeaveResponse> getAllLeaveRequests(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
         Page<com.hrmanagement.hr_management.entity.LeaveRequest> pageData = leaveRequestRepository.findAll(pageable);
 
         return mapToPageResponse(pageData);

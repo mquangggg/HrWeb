@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.hrmanagement.hr_management.dto.request.LoginRequest;
@@ -45,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Lấy thông tin User
         Employee employee = employeeRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         EmployeeResponse employeeResponse = EmployeeResponse.builder()
                 .id(employee.getId())
@@ -115,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
     public EmployeeResponse getMe() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return EmployeeResponse.builder()
                 .id(employee.getId())

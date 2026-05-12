@@ -13,21 +13,11 @@ let departments = []; // Dữ liệu thật sẽ được load từ API
 
 let positions = []; // Dữ liệu thật sẽ được load từ API
 
-let attendances = [
-    { emp:'Nguyễn Văn An',  date:'21/04/2026', checkIn:'08:02', checkOut:'17:05', hours:9.05, status:'Đúng giờ' },
-    { emp:'Trần Thị Bình',  date:'21/04/2026', checkIn:'08:45', checkOut:'17:00', hours:8.25, status:'Đi muộn'  },
-    { emp:'Lê Minh Châu',   date:'21/04/2026', checkIn:'07:55', checkOut:'17:10', hours:9.25, status:'Đúng giờ' },
-    { emp:'Hoàng Văn Em',   date:'21/04/2026', checkIn:'',      checkOut:'',      hours:0,    status:'Vắng mặt' },
-    { emp:'Võ Thị Phương',  date:'21/04/2026', checkIn:'08:10', checkOut:'17:00', hours:8.83, status:'Đúng giờ' },
-];
+let attendances = [];
 
-let leaveRequests = [
-    { id:1, emp:'Trần Thị Bình', from:'22/04/2026', to:'23/04/2026', days:2, reason:'Việc gia đình',    status:'PENDING'  },
-    { id:2, emp:'Lê Minh Châu',  from:'25/04/2026', to:'25/04/2026', days:1, reason:'Khám bệnh',       status:'PENDING'  },
-    { id:3, emp:'Hoàng Văn Em',  from:'28/04/2026', to:'28/04/2026', days:1, reason:'Nghỉ cá nhân',    status:'PENDING'  },
-    { id:4, emp:'Nguyễn Văn An', from:'15/04/2026', to:'15/04/2026', days:1, reason:'Việc cá nhân',    status:'APPROVED' },
-    { id:5, emp:'Võ Thị Phương', from:'10/04/2026', to:'11/04/2026', days:2, reason:'Đám cưới anh họ', status:'REJECTED' },
-];
+
+let leaveRequests = [];
+
 
 // ===================================================
 //  ĐIỀU HƯỚNG – HIỆN / ẨN SECTION
@@ -44,6 +34,36 @@ const sectionTitles = {
 };
 
 function showSection(name) {
+    const token = localStorage.getItem('token');
+    // Kiểm tra token ngầm với Server trước khi chuyển mục
+    $.ajax({
+        url: '/api/v1/auth/me',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function() {
+            // Token còn hạn -> Chuyển mục mượt mà
+            showSectionInternal(name);
+            fetchDataForSection(name);
+        },
+        error: function(xhr) {
+            // Token hết hạn hoặc lỗi -> Đá ra trang login
+            if (xhr.status === 401 || xhr.status === 403 || xhr.status === 400) {
+                handleLogout(false);
+            } else {
+                alert('Không thể kết nối tới máy chủ. Vui lòng thử lại sau.');
+            }
+        }
+    });
+}
+
+function showSectionInternal(name) {
+    // Lưu vào localStorage để ghi nhớ
+    localStorage.setItem('active_section', name);
+
+    // Cập nhật URL mà không reload trang (để F5 vẫn đúng chỗ)
+    const newUrl = window.location.pathname + '?section=' + name;
+    window.history.pushState({ section: name }, '', newUrl);
+
     // Ẩn tất cả sections
     $('.section').removeClass('active');
     // Hiện section được chọn
@@ -55,9 +75,17 @@ function showSection(name) {
 
     // Cập nhật tiêu đề header
     $('#header-title').text(sectionTitles[name] || name);
+}
 
-    // Tự động load dữ liệu khi vào section tương ứng
+// Hàm bổ trợ để tải dữ liệu riêng cho từng section khi cần
+function fetchDataForSection(name) {
     if (name === 'payroll') fetchPayrolls();
+    if (name === 'dashboard') fetchDashboardStats();
+    if (name === 'employee') fetchEmployees(0);
+    if (name === 'department') fetchDepartments();
+    if (name === 'position') fetchPositions();
+    if (name === 'attendance') initAttendanceCalendar();
+    if (name === 'leave') fetchLeaveRequests(0);
 }
 
 // ===================================================
@@ -72,6 +100,7 @@ function updateClock() {
 
     $('#clock').text(time);
     $('#header-date').text(date);
+    $('#att-today-date').text(date);
     
     // Cập nhật banner chào mừng (chỉ cập nhật một lần hoặc định kỳ)
     if ($('#banner-date').text() === '...') {
@@ -86,18 +115,21 @@ setInterval(updateClock, 1000); // cập nhật mỗi giây
 //  LOAD THÔNG TIN USER TỪ LOCALSTORAGE VÀ URL
 // ===================================================
 function loadUserInfo() {
-    // Nếu có token trên URL (từ đăng nhập Google), lưu vào localStorage
+    // 1. Xác định section ngay lập tức để tránh bị nháy UI
     const urlParams = new URLSearchParams(window.location.search);
+    const savedSection = localStorage.getItem('active_section');
+    const section = urlParams.get('section') || savedSection || 'dashboard';
+    showSectionInternal(section);
+
+    // 2. Xử lý Token từ URL (Google Login)
     const urlToken = urlParams.get('token');
     if (urlToken) {
         localStorage.setItem('token', urlToken);
-        // Xóa token khỏi URL để bảo mật
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const token = localStorage.getItem('token');
     if (!token) {
-        // Chưa đăng nhập -> về trang login
         window.location.href = '/pages/login.html';
         return;
     }
@@ -115,11 +147,15 @@ function loadUserInfo() {
             
             // CHỈ bắt đầu load dữ liệu khi đã xác thực user thành công
             fetchInitialData(user);
+            
+            // Tải dữ liệu riêng cho section hiện tại
+            const section = localStorage.getItem('active_section') || 'dashboard';
+            fetchDataForSection(section);
         },
         error: function(xhr) {
-            if (xhr.status === 401) {
-                console.warn('Phiên làm việc hết hạn.');
-                handleLogout(false); // Đăng xuất im lặng nếu token hết hạn
+            if (xhr.status === 401 || xhr.status === 400 || xhr.status === 403) {
+                console.warn('Phiên làm việc không hợp lệ.');
+                handleLogout(false);
             } else {
                 console.error('Không thể kết nối server, dùng dữ liệu cũ nếu có');
                 const userStr = localStorage.getItem('user');
@@ -135,6 +171,11 @@ function loadUserInfo() {
 
 // Hàm tập hợp các lệnh load dữ liệu ban đầu để tránh bị rối và tối ưu tốc độ
 function fetchInitialData(user) {
+    // Set mặc định tháng hiện tại cho ô chọn tháng bảng lương
+    const now = new Date();
+    const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    $('#payroll-month').val(currentMonth);
+
     fetchNotifications(); 
     if (user.role === 'ADMIN') {
         fetchDashboardStats();
@@ -206,7 +247,31 @@ function handleLogout(confirmNeeded = true) {
     if (confirmNeeded && !confirm('Bạn có chắc muốn đăng xuất không?')) return;
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/pages/login.html';
+    localStorage.removeItem('active_section');
+    const msg = !confirmNeeded ? '?error=session_expired' : '';
+    window.location.href = '/pages/login.html' + msg;
+}
+
+function showToast(message, type = 'success') {
+    const toastEl = $('#liveToast');
+    const header = toastEl.find('.toast-header');
+    const icon = $('#toast-icon');
+    
+    // Set màu sắc theo loại
+    if (type === 'success') {
+        header.css('background-color', '#d1e7dd').css('color', '#0f5132');
+        icon.attr('class', 'fas fa-check-circle me-2');
+    } else if (type === 'danger') {
+        header.css('background-color', '#f8d7da').css('color', '#842029');
+        icon.attr('class', 'fas fa-exclamation-circle me-2');
+    } else {
+        header.css('background-color', '#e2e3e5').css('color', '#41464b');
+        icon.attr('class', 'fas fa-info-circle me-2');
+    }
+    
+    $('#toast-body').text(message);
+    const toast = new bootstrap.Toast(toastEl[0]);
+    toast.show();
 }
 
 // ===================================================
@@ -1156,6 +1221,9 @@ function renderLeaveRequests(list, user) {
     });
     $('#leave-tbody').html(html || '<tr><td colspan="8" class="text-center text-muted py-3">Không có đơn nghỉ phép nào</td></tr>');
     
+    // Gọi render phân trang
+    renderLeavePagination();
+
     // Badge số đơn chờ duyệt chỉ hiện cho ADMIN/MANAGER
     if (role === 'MANAGER' || role === 'ADMIN') {
         $('#leave-badge').text(pending).toggle(pending > 0);
@@ -1163,6 +1231,24 @@ function renderLeaveRequests(list, user) {
 }
 // Gọi lần đầu khi load - Đã chuyển vào fetchInitialData
 // fetchLeaveRequests();
+
+function renderLeavePagination() {
+    const total = leavePagination.totalPages;
+    const cur   = leavePagination.page;
+    if (total <= 1) { $('#leave-pagination').html(''); return; }
+
+    let html = `<nav><ul class="pagination pagination-sm mb-0">`;
+    html += `<li class="page-item ${cur === 0 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="fetchLeaveRequests(${cur - 1}); return false;">«</a></li>`;
+    for (let i = 0; i < total; i++) {
+        html += `<li class="page-item ${i === cur ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="fetchLeaveRequests(${i}); return false;">${i + 1}</a></li>`;
+    }
+    html += `<li class="page-item ${cur === total - 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="fetchLeaveRequests(${cur + 1}); return false;">»</a></li>`;
+    html += `</ul></nav>`;
+    $('#leave-pagination').html(html);
+}
 
 // Mở modal tạo đơn – Ẩn dropdown nhân viên
 function openLeaveModal() {

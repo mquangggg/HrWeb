@@ -340,6 +340,15 @@
             $('#login-email').val(savedEmail);
             $('#remember-me').prop('checked', true);
         }
+
+        // 3. Kiểm tra thông báo lỗi từ URL (ví dụ: hết hạn phiên)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'session_expired') {
+            $('#login-alert')
+                .removeClass('d-none alert-danger')
+                .addClass('alert-warning')
+                .html('<i class="fas fa-exclamation-triangle me-2"></i> Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+        }
     });
 
     // ===== CHUYỂN GIỮA PANEL ĐĂNG NHẬP / ĐĂNG KÝ =====

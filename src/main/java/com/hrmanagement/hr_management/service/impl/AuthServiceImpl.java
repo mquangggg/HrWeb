@@ -10,8 +10,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.hrmanagement.hr_management.dto.request.ChangePasswordRequest;
 import com.hrmanagement.hr_management.dto.request.LoginRequest;
 import com.hrmanagement.hr_management.dto.request.RegisterRequest;
+import com.hrmanagement.hr_management.dto.request.UpdateProfileRequest;
 import com.hrmanagement.hr_management.dto.response.AuthResponse;
 import com.hrmanagement.hr_management.dto.response.EmployeeResponse;
 import com.hrmanagement.hr_management.entity.Employee;
@@ -134,5 +136,56 @@ public class AuthServiceImpl implements AuthService {
                 .positionId(employee.getPosition() != null ? employee.getPosition().getId() : null)
                 .positionName(employee.getPosition() != null ? employee.getPosition().getName() : null)
                 .build();
+    }
+
+    // Cập nhật thông tin cá nhân: họ, tên, số điện thoại
+    @Override
+    public EmployeeResponse updateProfile(UpdateProfileRequest request) {
+        // Lấy email từ token đang đăng nhập
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Chỉ cho phép cập nhật thông tin cơ bản, không thay đổi role hay lương
+        employee.setFirstName(request.getFirstName());
+        employee.setLastName(request.getLastName());
+        employee.setPhone(request.getPhone());
+
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        return EmployeeResponse.builder()
+                .id(savedEmployee.getId())
+                .firstName(savedEmployee.getFirstName())
+                .lastName(savedEmployee.getLastName())
+                .email(savedEmployee.getEmail())
+                .phone(savedEmployee.getPhone())
+                .role(savedEmployee.getRole())
+                .baseSalary(savedEmployee.getBaseSalary())
+                .allowance(savedEmployee.getAllowance())
+                .startDate(savedEmployee.getStartDate())
+                .status(savedEmployee.getStatus())
+                .departmentId(savedEmployee.getDepartment() != null ? savedEmployee.getDepartment().getId() : null)
+                .departmentName(savedEmployee.getDepartment() != null ? savedEmployee.getDepartment().getName() : null)
+                .positionId(savedEmployee.getPosition() != null ? savedEmployee.getPosition().getId() : null)
+                .positionName(savedEmployee.getPosition() != null ? savedEmployee.getPosition().getName() : null)
+                .build();
+    }
+
+    // Đổi mật khẩu: kiểm tra mật khẩu cũ trước khi lưu mật khẩu mới
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        // Lấy email từ token đang đăng nhập
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Kiểm tra mật khẩu cũ có đúng không
+        if (!passwordEncoder.matches(request.getOldPassword(), employee.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không đúng!");
+        }
+
+        // Mã hóa và lưu mật khẩu mới
+        employee.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        employeeRepository.save(employee);
     }
 }

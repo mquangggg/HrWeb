@@ -66,14 +66,20 @@
 
         <!-- Thông tin user đăng nhập -->
         <div class="sidebar-user">
-            <div class="user-card" onclick="handleLogout()">
+            <!-- Click vào card → Mở hồ sơ cá nhân -->
+            <div class="user-card" onclick="openProfileModal()" title="Xem hồ sơ cá nhân" style="cursor:pointer">
                 <div class="user-avatar" id="sidebar-avatar">...</div>
                 <div style="flex:1; min-width:0">
                     <div class="user-name" id="sidebar-name">Đang tải...</div>
                     <div class="user-role" id="sidebar-role">...</div>
                 </div>
-                <i class="fas fa-right-from-bracket" style="color:rgba(255,255,255,0.3); font-size:13px"></i>
+                <i class="fas fa-user-circle" style="color:rgba(255,255,255,0.5); font-size:16px" title="Hồ sơ cá nhân"></i>
             </div>
+            <!-- Nút đăng xuất riêng -->
+            <button class="btn btn-sm w-100 mt-1" onclick="handleLogout()"
+                style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); border:none; font-size:12px; border-radius:8px; padding:5px;">
+                <i class="fas fa-right-from-bracket me-1"></i> Đăng xuất
+            </button>
         </div>
     </nav>
 
@@ -855,6 +861,183 @@
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <button class="btn btn-indigo" onclick="saveNotification()">
                         <i class="fas fa-paper-plane me-1"></i> Đăng tin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal: Hồ sơ cá nhân -->
+    <div class="modal fade" id="profile-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-circle me-2 text-primary"></i>Hồ sơ cá nhân</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Tab chuyển đổi -->
+                    <ul class="nav nav-tabs mb-3" id="profile-tabs">
+                        <li class="nav-item">
+                            <button class="nav-link active" onclick="switchProfileTab('info')" id="tab-info">
+                                <i class="fas fa-id-card me-1"></i> Thông tin
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" onclick="switchProfileTab('password')" id="tab-password">
+                                <i class="fas fa-lock me-1"></i> Đổi mật khẩu
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab: Thông tin cá nhân -->
+                    <div id="profile-tab-info">
+                        <!-- Avatar + tên hiển thị -->
+                        <div class="text-center mb-3">
+                            <div id="profile-avatar-big"
+                                style="width:70px; height:70px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; color:#fff; background:#6366f1; margin-bottom:8px;">NV</div>
+                            <div class="fw-bold" id="profile-fullname-display">---</div>
+                            <div class="text-muted small" id="profile-email-display">---</div>
+                        </div>
+                        <!-- Form chỉnh sửa -->
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label fw-medium">Họ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="profile-firstname" placeholder="Nguyễn">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-medium">Tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="profile-lastname" placeholder="Văn A">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Email</label>
+                                <input type="email" class="form-control bg-light" id="profile-email" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="profile-phone" placeholder="0901 234 567">
+                            </div>
+                            <!-- Thông tin chỉ đọc -->
+                            <div class="col-6">
+                                <label class="form-label fw-medium">Phòng ban</label>
+                                <input type="text" class="form-control bg-light" id="profile-dept" readonly>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-medium">Chức vụ</label>
+                                <input type="text" class="form-control bg-light" id="profile-position" readonly>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-medium">Vai trò</label>
+                                <input type="text" class="form-control bg-light" id="profile-role" readonly>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-medium">Ngày vào làm</label>
+                                <input type="text" class="form-control bg-light" id="profile-startdate" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Đổi mật khẩu -->
+                    <div id="profile-tab-password" style="display:none">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Mật khẩu cũ <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="profile-old-password" placeholder="Nhập mật khẩu hiện tại">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Mật khẩu mới <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="profile-new-password" placeholder="Tối thiểu 6 ký tự">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="profile-confirm-password" placeholder="Nhập lại mật khẩu mới">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <!-- Nút lưu thông tin (chỉ hiện ở tab info) -->
+                    <button class="btn btn-indigo" id="btn-save-profile" onclick="saveProfile()">
+                        <i class="fas fa-save me-1"></i> Lưu thông tin
+                    </button>
+                    <!-- Nút đổi mật khẩu (chỉ hiện ở tab password) -->
+                    <button class="btn btn-warning text-white" id="btn-change-password" onclick="doChangePassword()" style="display:none">
+                        <i class="fas fa-lock me-1"></i> Đổi mật khẩu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Chi tiết nhân viên -->
+    <div class="modal fade" id="emp-detail-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user me-2 text-primary"></i>Thông tin nhân viên</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Avatar + tên -->
+                    <div class="text-center mb-4">
+                        <div id="emp-detail-avatar"
+                            style="width:70px; height:70px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; color:#fff; background:#6366f1; margin-bottom:8px;">NV</div>
+                        <div class="fw-bold fs-6" id="emp-detail-fullname">---</div>
+                        <div class="text-muted small" id="emp-detail-email">---</div>
+                        <div class="mt-1" id="emp-detail-role-badge"></div>
+                    </div>
+                    <!-- Chi tiết dạng lưới -->
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0">
+                                <div class="text-muted" style="font-size:11px">SỐ ĐIỆN THOẠI</div>
+                                <div class="fw-medium" style="font-size:13px" id="emp-detail-phone">---</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0">
+                                <div class="text-muted" style="font-size:11px">TRẠNG THÁI</div>
+                                <div id="emp-detail-status">---</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0">
+                                <div class="text-muted" style="font-size:11px">PHÒNG BAN</div>
+                                <div class="fw-medium" style="font-size:13px" id="emp-detail-dept">---</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0">
+                                <div class="text-muted" style="font-size:11px">CHỨC VỤ</div>
+                                <div class="fw-medium" style="font-size:13px" id="emp-detail-position">---</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0">
+                                <div class="text-muted" style="font-size:11px">NGÀY VÀO LÀM</div>
+                                <div class="fw-medium" style="font-size:13px" id="emp-detail-startdate">---</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded" style="background:#f8fafc; border:1px solid #e2e8f0">
+                                <div class="text-muted" style="font-size:11px">PHỤ CẤP</div>
+                                <div class="fw-medium text-success" style="font-size:13px" id="emp-detail-allowance">---</div>
+                            </div>
+                        </div>
+                        <!-- Lương cơ bản: Chỉ admin mới thấy -->
+                        <div class="col-12 admin-only" id="emp-detail-salary-row">
+                            <div class="p-3 rounded" style="background:#eff6ff; border:1px solid #bfdbfe">
+                                <div class="text-muted" style="font-size:11px">LƯƠNG CƠ BẢN</div>
+                                <div class="fw-bold text-primary" style="font-size:15px" id="emp-detail-salary">---</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <!-- Nút sửa: chỉ hiện với admin/manager -->
+                    <button class="btn btn-indigo admin-only" id="btn-edit-from-detail" onclick="editEmpFromDetail()">
+                        <i class="fas fa-pen me-1"></i> Chỉnh sửa
                     </button>
                 </div>
             </div>

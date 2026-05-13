@@ -502,7 +502,7 @@ function renderEmployees() {
         const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
         const rowNum   = empPagination.page * empPagination.size + i + 1;
 
-        html += `<tr>
+        html += `<tr style="cursor:pointer" onclick="showEmpDetail(${emp.id})">
             <td class="ps-3 text-muted">${rowNum}</td>
             <td>
                 <div class="d-flex align-items-center">
@@ -520,7 +520,7 @@ function renderEmployees() {
             <td style="font-size:13px">${role === 'ADMIN' ? formatVND(emp.baseSalary || 0) : '***'}</td>
             <td>${statusBadge(emp.status)}</td>
             ${role !== 'EMPLOYEE' ? `
-            <td class="text-center admin-only">
+            <td class="text-center admin-only" onclick="event.stopPropagation()">
                 ${(role === 'ADMIN' || (role === 'MANAGER' && emp.departmentId === user.departmentId)) ? `
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openEmpModal(${emp.id})">
                     <i class="fas fa-pen"></i>
@@ -1516,3 +1516,199 @@ function deleteRow(type, id) {
 
     new bootstrap.Modal($('#confirm-modal')[0]).show();
 }
+
+// ===================================================
+//  HỔ SƠ CÁ NHÂN – Mở modal, lưu, đổi mật khẩu
+// ===================================================
+// Biến lưu id của nhân viên đang xem chi tiết (dùng khi mở modal sửa từ chi tiết)
+let currentDetailEmpId = null;
+
+function openProfileModal() {
+    const token = localStorage.getItem('token');
+    // Lấy thông tin mới nhất từ API
+    $.ajax({
+        url: '/api/v1/auth/me',
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token },
+        success: function(user) {
+            // Điền thông tin vào form
+            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+            const initials = ((user.firstName || '').charAt(0) + (user.lastName || '').charAt(0)).toUpperCase() || 'NV';
+            const colors = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899'];
+            const color = colors[(user.id || 0) % colors.length];
+
+            $('#profile-avatar-big').text(initials).css('background', color);
+            $('#profile-fullname-display').text(fullName);
+            $('#profile-email-display').text(user.email);
+
+            $('#profile-firstname').val(user.firstName || '');
+            $('#profile-lastname').val(user.lastName || '');
+            $('#profile-email').val(user.email || '');
+            $('#profile-phone').val(user.phone || '');
+            $('#profile-dept').val(user.departmentName || 'Chưa có');
+            $('#profile-position').val(user.positionName || 'Chưa có');
+            $('#profile-role').val(user.role || '');
+            $('#profile-startdate').val(user.startDate || '');
+
+            // Reset về tab thông tin
+            switchProfileTab('info');
+
+            new bootstrap.Modal($('#profile-modal')[0]).show();
+        },
+        error: function(xhr) {
+            if (xhr.status === 401) handleLogout(false);
+            alert('Không thể tải thông tin cá nhân!');
+        }
+    });
+}
+
+// Chuyển tab trong modal hồ sơ
+function switchProfileTab(tab) {
+    if (tab === 'info') {
+        $('#profile-tab-info').show();
+        $('#profile-tab-password').hide();
+        $('#tab-info').addClass('active');
+        $('#tab-password').removeClass('active');
+        $('#btn-save-profile').show();
+        $('#btn-change-password').hide();
+    } else {
+        $('#profile-tab-info').hide();
+        $('#profile-tab-password').show();
+        $('#tab-info').removeClass('active');
+        $('#tab-password').addClass('active');
+        $('#btn-save-profile').hide();
+        $('#btn-change-password').show();
+        // Reset form đổi mật khẩu
+        $('#profile-old-password, #profile-new-password, #profile-confirm-password').val('');
+    }
+}
+
+// Lưu thông tin cá nhân
+function saveProfile() {
+    const firstName = $('#profile-firstname').val().trim();
+    const lastName  = $('#profile-lastname').val().trim();
+    const phone     = $('#profile-phone').val().trim();
+
+    if (!firstName || !lastName) {
+        alert('Vui lòng nhập họ và tên!');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/auth/me',
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token },
+        contentType: 'application/json',
+        data: JSON.stringify({ firstName, lastName, phone: phone || null }),
+        success: function(updatedUser) {
+            // Cập nhật thông tin trong localStorage và sidebar
+            const savedUser = JSON.parse(localStorage.getItem('user')) || {};
+            savedUser.firstName = updatedUser.firstName;
+            savedUser.lastName  = updatedUser.lastName;
+            savedUser.phone     = updatedUser.phone;
+            localStorage.setItem('user', JSON.stringify(savedUser));
+            renderUserToDOM(updatedUser);
+
+            bootstrap.Modal.getInstance($('#profile-modal')[0]).hide();
+            showToast('Cập nhật thông tin thành công!', 'success');
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Có lỗi xảy ra khi lưu thông tin!');
+        }
+    });
+}
+
+// Đổi mật khẩu
+function doChangePassword() {
+    const oldPassword     = $('#profile-old-password').val();
+    const newPassword     = $('#profile-new-password').val();
+    const confirmPassword = $('#profile-confirm-password').val();
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        alert('Vui lòng nhập đầy đủ thông tin!');
+        return;
+    }
+    if (newPassword.length < 6) {
+        alert('Mật khẩu mới phải có ít nhất 6 ký tự!');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        alert('Mật khẩu mới và xác nhận không khớp!');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    $.ajax({
+        url: '/api/v1/auth/change-password',
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        contentType: 'application/json',
+        data: JSON.stringify({ oldPassword, newPassword }),
+        success: function() {
+            bootstrap.Modal.getInstance($('#profile-modal')[0]).hide();
+            showToast('Đổi mật khẩu thành công!', 'success');
+        },
+        error: function(xhr) {
+            alert(xhr.responseJSON?.message || 'Mật khẩu cũ không đúng!');
+        }
+    });
+}
+
+// ===================================================
+//  CHI TIẾT NHÂN VIÊN – Hiện modal khi click vào hàng
+// ===================================================
+function showEmpDetail(id) {
+    const emp = employees.find(e => e.id === id);
+    if (!emp) return;
+
+    currentDetailEmpId = id;
+
+    const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+    const initials = ((emp.firstName || '').charAt(0) + (emp.lastName || '').charAt(0)).toUpperCase() || 'NV';
+    const colors = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899','#ef4444','#3b82f6'];
+    const color = colors[(emp.id || 0) % colors.length];
+    const user = JSON.parse(localStorage.getItem('user'));
+    const role = user?.role || 'EMPLOYEE';
+
+    // Điền avatar
+    $('#emp-detail-avatar').text(initials).css('background', color);
+    $('#emp-detail-fullname').text(fullName);
+    $('#emp-detail-email').text(emp.email || '—');
+    $('#emp-detail-role-badge').html(roleBadge(emp.role));
+
+    // Điền các thông tin khác
+    $('#emp-detail-phone').text(emp.phone || 'Chưa cập nhật');
+    $('#emp-detail-status').html(statusBadge(emp.status));
+    $('#emp-detail-dept').text(emp.departmentName || 'Chưa phân công');
+    $('#emp-detail-position').text(emp.positionName || 'Chưa phân công');
+    $('#emp-detail-startdate').text(emp.startDate || '—');
+    $('#emp-detail-allowance').text(formatVND(emp.allowance || 0));
+
+    // Lương cơ bản chỉ admin thấy
+    if (role === 'ADMIN') {
+        $('#emp-detail-salary').text(formatVND(emp.baseSalary || 0));
+        $('#emp-detail-salary-row').show();
+    } else {
+        $('#emp-detail-salary-row').hide();
+    }
+
+    // Nút sửa chỉ hiện với admin/manager
+    if (role === 'EMPLOYEE') {
+        $('#btn-edit-from-detail').hide();
+    } else {
+        $('#btn-edit-from-detail').show();
+    }
+
+    new bootstrap.Modal($('#emp-detail-modal')[0]).show();
+}
+
+// Đóng modal chi tiết và mở modal sửa nhân viên
+function editEmpFromDetail() {
+    bootstrap.Modal.getInstance($('#emp-detail-modal')[0]).hide();
+    // Sau khi modal đóng xong mới mở modal sửa (tránh xung đột)
+    setTimeout(function() {
+        openEmpModal(currentDetailEmpId);
+    }, 300);
+}
+

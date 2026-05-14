@@ -1,0 +1,315 @@
+        /* ===== CSS CHỈ DÙNG CHO NHỮNG THỨ BOOTSTRAP CHƯA HỖ TRỢ ===== */
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: #1e2235;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        /* Logo trên sidebar */
+        .sidebar-logo {
+            padding: 20px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 16px; flex-shrink: 0;
+        }
+        .logo-text { color: white; font-size: 14px; font-weight: 700; }
+        .logo-sub  { color: rgba(255,255,255,0.4); font-size: 10px; }
+
+        /* Nav menu */
+        .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255,255,255,0.3);
+            padding: 10px 8px 4px;
+            margin-top: 6px;
+        }
+
+        /* Mỗi nav item */
+        .nav-item-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 9px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 2px;
+            transition: all 0.2s;
+            border: none; background: none; width: 100%; text-align: left;
+        }
+        .nav-item-link:hover {
+            background: rgba(255,255,255,0.07);
+            color: white;
+        }
+        /* Nav item đang active (đang xem) */
+        .nav-item-link.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2));
+            color: #a5b4fc;
+            border: 1px solid rgba(99,102,241,0.2);
+        }
+        .nav-item-link i { width: 18px; text-align: center; }
+
+        /* Badge thông báo nhỏ trên nav */
+        .nav-badge {
+            margin-left: auto;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        /* Thông tin user ở cuối sidebar */
+        .sidebar-user {
+            padding: 14px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .user-card {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px; border-radius: 10px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .user-card:hover { background: rgba(255,255,255,0.07); }
+        .user-avatar {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 13px; font-weight: 700;
+        }
+        .user-name { color: white; font-size: 13px; font-weight: 600; }
+        .user-role {
+            font-size: 10px; background: rgba(99,102,241,0.25);
+            color: #a5b4fc; padding: 2px 6px; border-radius: 4px;
+            display: inline-block; margin-top: 2px;
+        }
+
+        /* === MAIN CONTENT === */
+        .main-content {
+            margin-left: 250px;  /* bằng width sidebar */
+            min-height: 100vh;
+        }
+
+        /* Header trên cùng */
+        .top-header {
+            background: white;
+            padding: 0 24px;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .page-title { font-size: 18px; font-weight: 700; color: #1f2937; }
+        .page-subtitle { font-size: 12px; color: #9ca3af; margin-top: 1px; }
+
+        /* === STAT CARDS (4 thẻ thống kê) === */
+        .stat-card {
+            border: none; border-radius: 14px;
+            padding: 20px; cursor: default;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-value { font-size: 32px; font-weight: 800; line-height: 1; }
+        .stat-label { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+        .stat-icon  { font-size: 28px; opacity: 0.4; }
+
+        /* === TABLE WRAPPER === */
+        .table-card {
+            background: white; border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .table-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .table-card-title { font-size: 15px; font-weight: 600; color: #1f2937; }
+
+        /* Bootstrap table override nhỏ */
+        .table th {
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: #9ca3af; background: #f9fafb;
+        }
+        .table td { font-size: 13.5px; vertical-align: middle; }
+
+        /* Màu avatar nhân viên */
+        .emp-avatar {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; color: white;
+        }
+
+        /* Welcome banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, #312e81, #4338ca, #1e3a5f);
+            border-radius: 14px; padding: 24px 28px; color: white;
+            position: relative; overflow: hidden;
+        }
+
+        /* Quick action buttons */
+        .quick-btn {
+            background: white; border: 1px solid #e5e7eb;
+            border-radius: 12px; padding: 16px;
+            text-align: center; cursor: pointer; text-decoration: none;
+            color: #6b7280; font-size: 12px; font-weight: 500;
+            transition: all 0.2s; display: block;
+        }
+        .quick-btn:hover {
+            border-color: #6366f1; color: #4f46e5;
+            background: #eef2ff; transform: translateY(-2px);
+        }
+        .quick-btn i { font-size: 22px; display: block; margin-bottom: 8px; }
+
+        /* Màu custom cho btn */
+        .btn-indigo {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none; color: white;
+        }
+        .btn-indigo:hover { opacity: 0.9; color: white; }
+
+        /* Section ẩn mặc định */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Clock realtime */
+        #clock { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+        /* ===== CHAT WIDGET ===== */
+        .chat-toggle {
+            position: fixed; bottom: 24px; right: 24px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white; border: none; font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 2000;
+            box-shadow: 0 4px 20px rgba(79,70,229,0.4);
+            transition: all 0.3s;
+        }
+        .chat-toggle:hover { transform: scale(1.1); }
+        .chat-toggle.active { transform: rotate(45deg); }
+
+        .chat-panel {
+            position: fixed; bottom: 90px; right: 24px;
+            width: 380px; height: 520px;
+            background: white; border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+            z-index: 2000; display: none;
+            flex-direction: column; overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .chat-panel.open { display: flex; }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white; padding: 14px 18px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .chat-header-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chat-header-title { font-size: 14px; font-weight: 600; }
+        .chat-header-sub { font-size: 11px; opacity: 0.8; }
+        .chat-close {
+            margin-left: auto; background: none; border: none;
+            color: rgba(255,255,255,0.7); cursor: pointer; font-size: 20px;
+            padding: 0; line-height: 1;
+        }
+
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 14px;
+            background: #f8fafc;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .chat-msg {
+            max-width: 85%; padding: 10px 14px;
+            border-radius: 12px; font-size: 13px; line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .chat-msg.user {
+            align-self: flex-end;
+            background: #4f46e5; color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg.bot {
+            align-self: flex-start;
+            background: white; color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-msg.bot p { margin-bottom: 6px; }
+        .chat-msg.bot ul, .chat-msg.bot ol { padding-left: 18px; margin-bottom: 6px; }
+        .chat-msg.bot li { margin-bottom: 2px; }
+        .chat-msg.bot strong { font-weight: 600; }
+        .chat-msg.bot .text-success { color: #059669; }
+        .chat-msg.bot .text-danger { color: #dc2626; }
+        .chat-msg.bot .text-warning { color: #d97706; }
+
+        .chat-typing {
+            align-self: flex-start;
+            display: flex; gap: 4px;
+            padding: 10px 16px;
+            background: white; border: 1px solid #e5e7eb;
+            border-radius: 12px; border-bottom-left-radius: 4px;
+        }
+        .chat-typing span {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #9ca3af;
+            animation: typing 1.4s infinite;
+        }
+        .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1); }
+        }
+
+        .chat-input-area {
+            padding: 10px 14px;
+            border-top: 1px solid #e5e7eb;
+            display: flex; gap: 8px; align-items: center;
+            background: white;
+        }
+        .chat-input-area input {
+            flex: 1; border: 1px solid #e5e7eb;
+            border-radius: 20px; padding: 8px 14px;
+            font-size: 13px; outline: none;
+        }
+        .chat-input-area input:focus { border-color: #4f46e5; }
+        .chat-send-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #4f46e5; color: white; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 14px;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .chat-send-btn:hover { background: #4338ca; }
+
+        .chat-welcome-msg {
+            text-align: center; color: #9ca3af;
+            padding: 30px 20px; font-size: 13px;
+        }
+        .chat-welcome-msg i { font-size: 40px; color: #c7d2fe; margin-bottom: 12px; }

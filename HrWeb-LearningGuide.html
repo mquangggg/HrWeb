@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn học – HrWeb Project</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Cover */
+  .cover {
+    text-align: center;
+    padding: 60px 0 40px;
+    border-bottom: 3px solid #4f46e5;
+    margin-bottom: 40px;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #4f46e5;
+    color: white;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+  }
+  .cover h1 span { color: #4f46e5; }
+  .cover p {
+    color: #666;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  .cover .stack {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .cover .stack span {
+    background: #f0f0ff;
+    border: 1px solid #c7c7ff;
+    color: #4f46e5;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* TOC */
+  .toc {
+    background: #f8f8ff;
+    border: 1px solid #e0e0ff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 36px;
+  }
+  .toc h2 { font-size: 14px; color: #4f46e5; margin-bottom: 12px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 4px 0; color: #333; }
+  .toc li a { color: #4f46e5; text-decoration: none; }
+
+  /* Sections */
+  .section {
+    margin-bottom: 40px;
+    page-break-inside: avoid;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0ff;
+  }
+  .section-num {
+    background: #4f46e5;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 18px;
+    color: #1a1a2e;
+  }
+
+  /* Subsections */
+  h3 {
+    font-size: 14px;
+    color: #4f46e5;
+    margin: 16px 0 8px;
+    padding-left: 10px;
+    border-left: 3px solid #4f46e5;
+  }
+
+  p { margin-bottom: 8px; color: #333; }
+
+  /* Code blocks */
+  pre {
+    background: #1a1a2e;
+    color: #a8d8a8;
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0 14px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+  code {
+    background: #f0f0ff;
+    color: #4f46e5;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 11.5px;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  th {
+    background: #4f46e5;
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f8f8ff; }
+
+  /* Callout boxes */
+  .note {
+    background: #fffbe6;
+    border-left: 4px solid #f5a623;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0;
+  }
+  .tip {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0;
+  }
+  .danger {
+    background: #fce8e8;
+    border-left: 4px solid #e53e3e;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0;
+  }
+  .note strong, .tip strong, .danger strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    font-size: 12px;
+  }
+  .flow-box {
+    background: #f0f0ff;
+    border: 1px solid #c7c7ff;
+    color: #4f46e5;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .flow-arrow { color: #999; font-size: 16px; }
+
+  /* Layer diagram */
+  .layers { margin: 12px 0; }
+  .layer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    gap: 12px;
+  }
+  .layer-name {
+    width: 110px;
+    font-weight: 700;
+    font-size: 11px;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .layer-desc { font-size: 12px; color: #555; }
+  .l1 { background: #4f46e5; }
+  .l2 { background: #7c3aed; }
+  .l3 { background: #db2777; }
+
+  /* Print */
+  @media print {
+    body { padding: 20px; font-size: 12px; }
+    .cover { page-break-after: always; }
+    .section { page-break-inside: avoid; }
+    h3 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">Tài liệu học tập</div>
+  <h1>Học từ <span>HrWeb Project</span></h1>
+  <p>Hệ thống Quản lý Nhân sự — Spring Boot + MySQL + Gemini AI</p>
+  <div class="stack">
+    <span>Java 25</span>
+    <span>Spring Boot 4.x</span>
+    <span>Spring Security</span>
+    <span>JWT</span>
+    <span>OAuth2</span>
+    <span>MySQL 8</span>
+    <span>Google Gemini AI</span>
+    <span>Maven</span>
+  </div>
+  <p style="margin-top:24px; color:#999; font-size:11px;">Tạo tự động từ phân tích codebase — 2025</p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>📋 Mục lục</h2>
+  <ol>
+    <li><a href="#s1">Kiến trúc 3 tầng (3-Layer Architecture)</a></li>
+    <li><a href="#s2">DTO Pattern — Tách biệt dữ liệu API và Database</a></li>
+    <li><a href="#s3">JWT Authentication — Xác thực không dùng session</a></li>
+    <li><a href="#s4">OAuth2 với Google — Đăng nhập bằng Google</a></li>
+    <li><a href="#s5">Spring Security &amp; Phân quyền theo Role</a></li>
+    <li><a href="#s6">Gemini AI Function Calling — Chatbot thông minh</a></li>
+    <li><a href="#s7">JPA &amp; Hibernate — Thao tác Database</a></li>
+    <li><a href="#s8">Những lỗi phổ biến trong dự án — Rút kinh nghiệm</a></li>
+    <li><a href="#s9">Roadmap học tiếp theo</a></li>
+  </ol>
+</div>
+
+<!-- SECTION 1 -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <h2>Kiến trúc 3 tầng (3-Layer Architecture)</h2>
+  </div>
+
+  <p>Đây là pattern nền tảng của mọi backend Java. Toàn bộ project HrWeb đều tuân theo cấu trúc này:</p>
+
+  <div class="layers">
+    <div class="layer">
+      <div class="layer-name l1">Controller</div>
+      <div class="layer-desc">Nhận HTTP request, gọi Service, trả HTTP response. <strong>Không chứa logic nghiệp vụ.</strong></div>
+    </div>
+    <div class="layer">
+      <div class="layer-name l2">Service</div>
+      <div class="layer-desc">Xử lý toàn bộ business logic, validation, tính toán. Đây là trái tim của ứng dụng.</div>
+    </div>
+    <div class="layer">
+      <div class="layer-name l3">Repository</div>
+      <div class="layer-desc">Chỉ giao tiếp với database. Không chứa logic, chỉ chứa query.</div>
+    </div>
+  </div>
+
+  <h3>Ví dụ từ project: Luồng tạo đơn nghỉ phép</h3>
+  <div class="flow">
+    <div class="flow-box">POST /api/v1/leave-requests</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">LeaveRequestController</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">LeaveRequestService</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">LeaveRequestRepository</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">MySQL</div>
+  </div>
+
+  <h3>Code minh họa</h3>
+<pre><code>// Controller — chỉ nhận request và gọi service
+@PostMapping
+public ResponseEntity&lt;LeaveResponse&gt; create(
+    @RequestBody LeaveRequest request,
+    @AuthenticationPrincipal UserDetails user) {
+    return ResponseEntity.ok(
+        leaveRequestService.createLeaveRequest(user.getUsername(), request)
+    );
+}
+
+// Service — xử lý business logic
+public LeaveResponse createLeaveRequest(String email, LeaveRequest req) {
+    // Validate: ngày hợp lệ? Còn phép không? Trùng đơn không?
+    if (!req.getStartDate().isAfter(LocalDate.now()))
+        throw new RuntimeException("Phải xin nghỉ trước ít nhất 1 ngày!");
+    // ... lưu database
+}
+</code></pre>
+
+  <div class="tip">
+    <strong>💡 Bài học</strong>
+    Quy tắc vàng: nếu bạn viết SQL query hoặc business logic trong Controller, đó là sai. Mỗi tầng chỉ làm đúng 1 việc.
+  </div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <h2>DTO Pattern — Tách biệt dữ liệu API và Database</h2>
+  </div>
+
+  <p>DTO (Data Transfer Object) là lớp trung gian giữa API và database. Project dùng 2 loại DTO:</p>
+
+  <table>
+    <tr><th>Loại</th><th>Vị trí</th><th>Mục đích</th></tr>
+    <tr><td><code>Request DTO</code></td><td>dto/request/</td><td>Nhận dữ liệu từ client gửi lên</td></tr>
+    <tr><td><code>Response DTO</code></td><td>dto/response/</td><td>Trả dữ liệu về cho client</td></tr>
+  </table>
+
+  <h3>Tại sao không trả Entity thẳng ra API?</h3>
+<pre><code>// ❌ SAI — trả Entity thẳng ra
+@GetMapping("/{id}")
+public Employee getEmployee(@PathVariable Long id) {
+    return employeeRepository.findById(id).get();
+    // Vấn đề: lộ password, salary, các quan hệ phức tạp
+    // JSON bị vòng lặp vô hạn: Employee → Department → Manager → Employee...
+}
+
+// ✅ ĐÚNG — dùng Response DTO
+@GetMapping("/{id}")
+public EmployeeResponse getEmployee(@PathVariable Long id) {
+    Employee emp = employeeRepository.findById(id).get();
+    return EmployeeResponse.builder()
+        .id(emp.getId())
+        .fullName(emp.getFirstName() + " " + emp.getLastName())
+        .department(emp.getDepartment().getName())
+        // password và salary bị ẩn đi
+        .build();
+}
+</code></pre>
+
+  <div class="note">
+    <strong>⚠️ Lưu ý</strong>
+    Với Lombok, dùng <code>@Builder</code> trên DTO để tạo object gọn gàng. Project này đã làm đúng điều này.
+  </div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <h2>JWT Authentication — Xác thực không dùng session</h2>
+  </div>
+
+  <p>JWT (JSON Web Token) là cách xác thực phổ biến nhất cho REST API hiện đại. Project dùng JWT thay vì session truyền thống.</p>
+
+  <h3>So sánh Session vs JWT</h3>
+  <table>
+    <tr><th></th><th>Session truyền thống</th><th>JWT (dùng trong project)</th></tr>
+    <tr><td>Lưu state</td><td>Server lưu session</td><td>Server không lưu gì</td></tr>
+    <tr><td>Scale</td><td>Khó (phải sync session)</td><td>Dễ (mỗi server tự verify)</td></tr>
+    <tr><td>Cách hoạt động</td><td>SessionID trong cookie</td><td>Token trong header</td></tr>
+  </table>
+
+  <h3>Luồng JWT trong project này</h3>
+  <div class="flow" style="flex-direction: column; align-items: flex-start; gap:8px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">1. Client</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">POST /api/v1/auth/login với email + password</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">2. Server</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Verify password → tạo JWT token (24h) → trả về client</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">3. Client</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Lưu token vào localStorage, gửi kèm mọi request tiếp theo</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">4. JwtFilter</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Chặn mọi request, verify token → cho phép hoặc từ chối</span>
+    </div>
+  </div>
+
+  <h3>Cấu trúc JWT Token</h3>
+<pre><code>eyJhbGciOiJIUzI1NiJ9         ← Header (thuật toán HMAC-SHA256)
+.eyJzdWIiOiJ1c2VyQGhyLmNvbSIsInJvbGUiOiJBRE1JTiJ9  ← Payload (email, role)
+.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c       ← Signature (chữ ký)
+</code></pre>
+
+  <h3>Code verify JWT</h3>
+<pre><code>// JwtAuthenticationFilter.java — chạy trước mọi request
+@Override
+protected void doFilterInternal(HttpServletRequest request, ...) {
+    String token = extractToken(request);   // Lấy token từ header
+    if (token != null && jwtUtil.validateToken(token)) {
+        String email = jwtUtil.getEmailFromToken(token);
+        // Đặt authentication vào SecurityContext
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+            email, null, getAuthorities(token));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+    filterChain.doFilter(request, response);
+}
+</code></pre>
+
+  <div class="danger">
+    <strong>🔴 Lỗi trong project này</strong>
+    JWT secret đang là "yourVeryStrongSecretKey123456789" — quá yếu và dễ đoán. Trong thực tế phải dùng key ngẫu nhiên 256-bit và lưu trong environment variable.
+  </div>
+</div>
+
+<!-- SECTION 4 -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <h2>OAuth2 với Google — Đăng nhập bằng Google</h2>
+  </div>
+
+  <p>Project cho phép đăng nhập bằng Google account thay vì tự nhập email/password. Đây là tính năng rất phổ biến.</p>
+
+  <h3>Luồng OAuth2</h3>
+  <div class="flow" style="flex-direction:column; align-items:flex-start; gap:8px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">1. Click "Login Google"</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Redirect tới trang đăng nhập của Google</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">2. Google xác thực</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Trả về authorization code cho backend</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">3. Backend</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Đổi code lấy user info (email, tên) từ Google</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">4. OAuth2SuccessHandler</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Tạo Employee mới (nếu chưa có) + tạo JWT → redirect về frontend</span>
+    </div>
+  </div>
+
+  <h3>Class quan trọng</h3>
+  <table>
+    <tr><th>File</th><th>Nhiệm vụ</th></tr>
+    <tr><td>OAuth2AuthenticationSuccessHandler.java</td><td>Xử lý sau khi Google xác thực thành công</td></tr>
+    <tr><td>CustomOAuth2UserService.java</td><td>Lấy thông tin user từ Google, tạo Employee nếu mới</td></tr>
+    <tr><td>SecurityConfig.java</td><td>Cấu hình endpoint OAuth2, redirect URI</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>💡 Bài học</strong>
+    Spring Boot xử lý hầu hết luồng OAuth2 tự động. Bạn chỉ cần cấu hình client-id, client-secret và viết SuccessHandler để tạo JWT sau khi đăng nhập thành công.
+  </div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <h2>Spring Security &amp; Phân quyền theo Role</h2>
+  </div>
+
+  <p>Project có 3 role: <code>ADMIN</code>, <code>MANAGER</code>, <code>EMPLOYEE</code>. Spring Security kiểm soát ai được làm gì.</p>
+
+  <h3>Cách phân quyền trong project</h3>
+<pre><code>// Cách 1: @PreAuthorize trên method — kiểm tra role tại đây
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+@GetMapping
+public ResponseEntity&lt;PageResponse&lt;EmployeeResponse&gt;&gt; getAllEmployees() { ... }
+
+@PreAuthorize("hasRole('ADMIN')")
+@PostMapping("/calculate")
+public ResponseEntity&lt;&gt; calculatePayroll() { ... }
+
+// Cách 2: Kiểm tra trong SecurityConfig — bảo vệ toàn bộ URL pattern
+http.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/api/v1/auth/**").permitAll()  // Không cần đăng nhập
+    .anyRequest().authenticated()                     // Còn lại phải login
+)
+</code></pre>
+
+  <h3>Bảng phân quyền của project</h3>
+  <table>
+    <tr><th>Chức năng</th><th>ADMIN</th><th>MANAGER</th><th>EMPLOYEE</th></tr>
+    <tr><td>Xem / CRUD nhân viên</td><td>✅ Tất cả</td><td>✅ Phòng ban mình</td><td>❌</td></tr>
+    <tr><td>Duyệt nghỉ phép</td><td>✅</td><td>✅ Phòng ban mình</td><td>❌</td></tr>
+    <tr><td>Tính lương</td><td>✅</td><td>❌</td><td>❌</td></tr>
+    <tr><td>Xem lương</td><td>✅ Tất cả</td><td>✅ Phòng ban</td><td>✅ Của mình</td></tr>
+    <tr><td>Chấm công</td><td>✅</td><td>✅</td><td>✅</td></tr>
+  </table>
+
+  <h3>Soft Delete — Không xóa dữ liệu thật</h3>
+<pre><code>// Thay vì DELETE FROM employees WHERE id = ?
+// Project chỉ đổi status = INACTIVE
+employee.setStatus(EmployeeStatus.inactive);
+employeeRepository.save(employee);
+
+// Dữ liệu vẫn còn trong DB, chỉ ẩn khỏi UI
+// Dùng để: audit trail, khôi phục, báo cáo lịch sử
+</code></pre>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <h2>Gemini AI Function Calling — Chatbot thông minh</h2>
+  </div>
+
+  <p>Đây là tính năng thú vị nhất của project. AI không tự truy cập database — nó <strong>"gọi tên" một function</strong>, backend thực thi, rồi AI dùng kết quả để trả lời.</p>
+
+  <h3>Cách Function Calling hoạt động</h3>
+  <div class="flow" style="flex-direction:column; align-items:flex-start; gap:10px; margin:12px 0;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">1. User</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">"Tôi còn bao nhiêu ngày phép?"</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">2. Gemini</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Quyết định gọi function: <code>get_leave_balance()</code></span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">3. AiService</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">Thực thi Java code, query database thật</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">4. Trả kết quả</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px"><code>{"conLai": 8, "daDung": 4, "tongNgayPhep": 12}</code></span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="flow-box">5. Gemini</div>
+      <span class="flow-arrow">→</span>
+      <span style="font-size:12px">"Bạn còn 8 ngày phép trong năm nay. Đã dùng 4 ngày."</span>
+    </div>
+  </div>
+
+  <h3>13 Functions có trong project</h3>
+  <table>
+    <tr><th>Function</th><th>Mô tả</th><th>Quyền</th></tr>
+    <tr><td><code>get_my_info</code></td><td>Thông tin cá nhân</td><td>Tất cả</td></tr>
+    <tr><td><code>get_leave_balance</code></td><td>Số ngày phép còn lại</td><td>Tất cả</td></tr>
+    <tr><td><code>get_my_leave_requests</code></td><td>Lịch sử đơn nghỉ</td><td>Tất cả</td></tr>
+    <tr><td><code>get_attendance_summary</code></td><td>Tổng kết chấm công</td><td>Tất cả</td></tr>
+    <tr><td><code>get_payroll_info</code></td><td>Thông tin lương</td><td>Tất cả</td></tr>
+    <tr><td><code>create_leave_request</code></td><td>Tạo đơn nghỉ phép</td><td>Tất cả</td></tr>
+    <tr><td><code>check_in</code></td><td>Chấm công vào</td><td>Tất cả</td></tr>
+    <tr><td><code>check_out</code></td><td>Chấm công ra</td><td>Tất cả</td></tr>
+    <tr><td><code>approve_leave_request</code></td><td>Duyệt đơn nghỉ</td><td>ADMIN, MANAGER</td></tr>
+    <tr><td><code>reject_leave_request</code></td><td>Từ chối đơn nghỉ</td><td>ADMIN, MANAGER</td></tr>
+    <tr><td><code>get_employees_by_department</code></td><td>DS nhân viên theo phòng ban</td><td>Tất cả</td></tr>
+    <tr><td><code>get_departments</code></td><td>Danh sách phòng ban</td><td>Tất cả</td></tr>
+    <tr><td><code>get_company_policies</code></td><td>Thông báo công ty</td><td>Tất cả</td></tr>
+  </table>
+
+  <h3>Pattern này gọi là gì?</h3>
+  <p>Đây là pattern <strong>"AI Agent with Tool Use"</strong> — nền tảng của mọi AI agent thực tế:</p>
+  <table>
+    <tr><th>Ứng dụng thực tế</th><th>Tương đương trong HrWeb</th></tr>
+    <tr><td>ChatGPT với plugin</td><td>Gemini + HR functions</td></tr>
+    <tr><td>GitHub Copilot đọc file</td><td>AI query database</td></tr>
+    <tr><td>AI đặt lịch Google Calendar</td><td>AI tạo đơn nghỉ phép</td></tr>
+  </table>
+</div>
+
+<!-- SECTION 7 -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <h2>JPA &amp; Hibernate — Thao tác Database</h2>
+  </div>
+
+  <p>Project dùng Spring Data JPA để tương tác với MySQL mà không cần viết SQL thủ công.</p>
+
+  <h3>3 cách viết query trong project</h3>
+<pre><code>// Cách 1: Method name — Spring tự sinh SQL
+List&lt;Employee&gt; findByDepartment(Department dept);
+// → SELECT * FROM employees WHERE department_id = ?
+
+Optional&lt;Employee&gt; findByEmail(String email);
+// → SELECT * FROM employees WHERE email = ?
+
+// Cách 2: @Query — viết JPQL tùy chỉnh
+@Query("SELECT e FROM Employee e WHERE " +
+       "(:name IS NULL OR LOWER(e.firstName) LIKE %:name%) AND " +
+       "(:deptId IS NULL OR e.department.id = :deptId)")
+Page&lt;Employee&gt; searchEmployees(@Param("name") String name,
+                                @Param("deptId") Long deptId, Pageable pageable);
+
+// Cách 3: Pagination tự động
+Page&lt;Employee&gt; findAll(Pageable pageable);
+// Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
+</code></pre>
+
+  <h3>Quan hệ giữa các Entity</h3>
+<pre><code>// Employee thuộc 1 Department (Many-to-One)
+@ManyToOne
+@JoinColumn(name = "department_id")
+private Department department;
+
+// Department có nhiều Employee (One-to-Many)
+@OneToMany(mappedBy = "department")
+private List&lt;Employee&gt; employees;
+
+// Chú ý: quan hệ 2 chiều → dễ bị vòng lặp khi serialize JSON
+// → Dùng DTO để tránh vấn đề này (xem Section 2)
+</code></pre>
+
+  <div class="note">
+    <strong>⚠️ Lưu ý quan trọng</strong>
+    <code>spring.jpa.hibernate.ddl-auto=update</code> trong project nghĩa là Hibernate tự tạo/cập nhật bảng khi start. Trong production nên dùng <code>validate</code> và quản lý schema bằng Flyway/Liquibase.
+  </div>
+</div>
+
+<!-- SECTION 8 -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <h2>Những lỗi phổ biến trong dự án — Rút kinh nghiệm</h2>
+  </div>
+
+  <div class="danger">
+    <strong>🔴 Lỗi 1 — API Key &amp; Secret hardcode trong source code</strong>
+    <p style="margin-top:6px;">File <code>application.properties</code> chứa Gemini API key và JWT secret dạng plaintext. Nếu push lên GitHub, key bị lộ ngay lập tức.</p>
+    <p><strong>Chuẩn:</strong> Dùng environment variable <code>${GEMINI_API_KEY}</code> hoặc file <code>.env</code> trong <code>.gitignore</code>.</p>
+  </div>
+
+  <div class="danger">
+    <strong>🔴 Lỗi 2 — userContext không được gửi lên Gemini (đã sửa)</strong>
+    <p style="margin-top:6px;">Code gốc xây dựng biến <code>userContext</code> (tên, phòng ban, role người dùng) nhưng không bao giờ đưa vào request gửi Gemini. AI không biết đang nói chuyện với ai.</p>
+    <p><strong>Sửa:</strong> Đưa <code>userContext</code> vào <code>systemInstruction</code> trong mỗi lần gọi Gemini API.</p>
+  </div>
+
+  <div class="note">
+    <strong>⚠️ Lỗi 3 — N+1 Query Problem</strong>
+    <p style="margin-top:6px;">Method <code>getDepartments()</code> query database 1 lần cho mỗi phòng ban để đếm nhân viên. Nếu có 20 phòng ban = 21 queries.</p>
+    <p><strong>Chuẩn:</strong> Dùng <code>GROUP BY department_id</code> để lấy toàn bộ trong 1 query duy nhất.</p>
+  </div>
+
+  <div class="note">
+    <strong>⚠️ Lỗi 4 — AI layer không tái sử dụng Service layer</strong>
+    <p style="margin-top:6px;">Hàm <code>createLeaveRequest()</code> trong AiService tự xử lý logic thay vì gọi <code>LeaveRequestService</code> có sẵn. Kết quả: thiếu validation overlap đơn nghỉ phép.</p>
+    <p><strong>Chuẩn:</strong> AI function chỉ nên gọi Service layer, không tự xử lý business logic.</p>
+  </div>
+
+  <div class="note">
+    <strong>⚠️ Lỗi 5 — Thiếu Unit Test hoàn toàn</strong>
+    <p style="margin-top:6px;">Project không có bất kỳ test nào. Sửa 1 chỗ có thể vô tình phá chỗ khác mà không biết.</p>
+    <p><strong>Chuẩn:</strong> Viết JUnit + Mockito test cho Service layer, đặc biệt là business logic phức tạp.</p>
+  </div>
+</div>
+
+<!-- SECTION 9 -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <h2>Roadmap học tiếp theo</h2>
+  </div>
+
+  <table>
+    <tr><th>Chủ đề</th><th>Lý do học</th><th>Mức độ ưu tiên</th></tr>
+    <tr>
+      <td><strong>Unit Test</strong><br><small>JUnit 5 + Mockito</small></td>
+      <td>Project này không có test nào. Đây là kỹ năng bắt buộc khi đi làm.</td>
+      <td>🔴 Cao</td>
+    </tr>
+    <tr>
+      <td><strong>Logging</strong><br><small>SLF4J + Logback</small></td>
+      <td>Project dùng e.printStackTrace() — không chuyên nghiệp. Logger chuẩn giúp debug production.</td>
+      <td>🔴 Cao</td>
+    </tr>
+    <tr>
+      <td><strong>Secret Management</strong><br><small>dotenv / Vault</small></td>
+      <td>Không hardcode API key trong source code. Kỹ năng bảo mật cơ bản.</td>
+      <td>🔴 Cao</td>
+    </tr>
+    <tr>
+      <td><strong>Database Migration</strong><br><small>Flyway / Liquibase</small></td>
+      <td>Thay thế ddl-auto=update bằng version-controlled migrations. Bắt buộc ở production.</td>
+      <td>🟡 Trung bình</td>
+    </tr>
+    <tr>
+      <td><strong>Redis Cache</strong></td>
+      <td>Lưu session chat AI server-side thay vì gửi từ client. Tăng hiệu năng.</td>
+      <td>🟡 Trung bình</td>
+    </tr>
+    <tr>
+      <td><strong>Docker</strong></td>
+      <td>Đóng gói ứng dụng và MySQL vào container. Triển khai dễ hơn rất nhiều.</td>
+      <td>🟡 Trung bình</td>
+    </tr>
+    <tr>
+      <td><strong>API Documentation</strong><br><small>Swagger / OpenAPI</small></td>
+      <td>Tạo tài liệu API tự động. Frontend dev sẽ biết cần gửi gì, nhận gì.</td>
+      <td>🟢 Thấp</td>
+    </tr>
+  </table>
+
+  <div class="tip" style="margin-top:20px;">
+    <strong>💡 Gợi ý thứ tự học</strong>
+    <p style="margin-top:6px;">Nếu bạn đã hiểu code trong project này → bước tiếp theo là: <strong>Viết test → Thêm Logging → Học Docker → Deploy lên cloud (Render / Railway miễn phí)</strong>. Đây là con đường ngắn nhất để có một project thực sự production-ready cho portfolio.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center; margin-top:40px; padding-top:20px; border-top:1px solid #eee; color:#999; font-size:11px;">
+  Tài liệu được tạo từ phân tích project HrWeb — Spring Boot + MySQL + Gemini AI
+  <br>In PDF: Ctrl+P → "Save as PDF" → khổ A4, Portrait
+</div>
+
+</body>
+</html>
